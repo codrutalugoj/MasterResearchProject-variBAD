@@ -7,7 +7,7 @@ logs/
 scripts/
 docker/
 
-.png
-.xml
-.stl
+*.png
+*.xml
+*.stl
 */assets
