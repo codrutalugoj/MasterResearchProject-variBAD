@@ -174,7 +174,7 @@ class MetaLearner:
 
             # First, re-compute the hidden states given the current rollouts (since the VAE might've changed)
             with torch.no_grad():
-                latent_sample, latent_mean, latent_logvar, hidden_state = self.encode_running_trajectory()
+                latent_sample, latent_mean, latent_logvar, hidden_state, precision = self.encode_running_trajectory()
 
             # add this initial hidden state to the policy storage
             assert len(self.policy_storage.latent_mean) == 0  # make sure we emptied buffers
@@ -211,13 +211,14 @@ class MetaLearner:
 
                 with torch.no_grad():
                     # compute next embedding (for next loop and/or value prediction bootstrap)
-                    latent_sample, latent_mean, latent_logvar, hidden_state = utl.update_encoding(
+                    latent_sample, latent_mean, latent_logvar, hidden_state, precision = utl.update_encoding(
                         encoder=self.vae.encoder,
                         next_obs=next_state,
                         action=action,
                         reward=rew_raw,
                         done=done,
-                        hidden_state=hidden_state)
+                        hidden_state=hidden_state,
+                        precision=precision)
 
                 # before resetting, update the embedding and add to vae buffer
                 # (last state might include useful task info)
@@ -304,10 +305,11 @@ class MetaLearner:
         prev_obs, next_obs, act, rew, lens = self.vae.rollout_storage.get_running_batch()
 
         # get embedding - will return (1+sequence_len) * batch * input_size -- includes the prior!
-        all_latent_samples, all_latent_means, all_latent_logvars, all_hidden_states = self.vae.encoder(actions=act,
+        all_latent_samples, all_latent_means, all_latent_logvars, all_hidden_states, all_precision = self.vae.encoder(actions=act,
                                                                                                        states=next_obs,
                                                                                                        rewards=rew,
                                                                                                        hidden_state=None,
+                                                                                                       precision=None,
                                                                                                        return_prior=True)
 
         # get the embedding / hidden state of the current time step (need to do this since we zero-padded)
@@ -315,8 +317,9 @@ class MetaLearner:
         latent_mean = (torch.stack([all_latent_means[lens[i]][i] for i in range(len(lens))])).to(device)
         latent_logvar = (torch.stack([all_latent_logvars[lens[i]][i] for i in range(len(lens))])).to(device)
         hidden_state = (torch.stack([all_hidden_states[lens[i]][i] for i in range(len(lens))])).to(device)
+        precision = (torch.stack([all_precision[lens[i]][i] for i in range(len(lens))])).to(device)
 
-        return latent_sample, latent_mean, latent_logvar, hidden_state
+        return latent_sample, latent_mean, latent_logvar, hidden_state, precision
 
     def get_value(self, state, belief, task, latent_sample, latent_mean, latent_logvar):
         latent = utl.get_latent_for_policy(self.args, latent_sample=latent_sample, latent_mean=latent_mean, latent_logvar=latent_logvar)

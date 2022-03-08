@@ -257,7 +257,7 @@ class GridNavi(gym.Env):
 
                 if episode_idx == 0:
                     # reset to prior
-                    curr_latent_sample, curr_latent_mean, curr_latent_logvar, hidden_state = encoder.prior(1)
+                    curr_latent_sample, curr_latent_mean, curr_latent_logvar, hidden_state, precision = encoder.prior(1)
                     curr_latent_sample = curr_latent_sample[0].to(device)
                     curr_latent_mean = curr_latent_mean[0].to(device)
                     curr_latent_logvar = curr_latent_logvar[0].to(device)
@@ -294,11 +294,12 @@ class GridNavi(gym.Env):
 
                 if encoder is not None:
                     # update task embedding
-                    curr_latent_sample, curr_latent_mean, curr_latent_logvar, hidden_state = encoder(
+                    curr_latent_sample, curr_latent_mean, curr_latent_logvar, hidden_state, precision = encoder(
                         action.float().to(device),
                         state,
                         rew_raw.reshape((1, 1)).float().to(device),
                         hidden_state,
+                        precision=precision,
                         return_prior=False)
 
                     episode_latent_samples[episode_idx].append(curr_latent_sample[0].clone())

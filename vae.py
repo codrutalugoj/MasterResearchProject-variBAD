@@ -531,10 +531,11 @@ class VaribadVAE:
         # vae_prev_obs will be of size: max trajectory len x num trajectories x dimension of observations
 
         # pass through encoder (outputs will be: (max_traj_len+1) x number of rollouts x latent_dim -- includes the prior!)
-        _, latent_mean, latent_logvar, _ = self.encoder(actions=vae_actions,
+        _, latent_mean, latent_logvar, _, _= self.encoder(actions=vae_actions,
                                                         states=vae_next_obs,
                                                         rewards=vae_rewards,
                                                         hidden_state=None,
+                                                        precision=None,
                                                         return_prior=True,
                                                         detach_every=self.args.tbptt_stepsize if hasattr(self.args, 'tbptt_stepsize') else None,
                                                         )

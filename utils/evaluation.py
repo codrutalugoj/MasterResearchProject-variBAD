@@ -55,7 +55,7 @@ def evaluate(args,
 
     if encoder is not None:
         # reset latent state to prior
-        latent_sample, latent_mean, latent_logvar, hidden_state = encoder.prior(num_processes)
+        latent_sample, latent_mean, latent_logvar, hidden_state, precision = encoder.prior(num_processes)
     else:
         latent_sample = latent_mean = latent_logvar = hidden_state = None
 
@@ -80,12 +80,13 @@ def evaluate(args,
 
             if encoder is not None:
                 # update the hidden state
-                latent_sample, latent_mean, latent_logvar, hidden_state = utl.update_encoding(encoder=encoder,
+                latent_sample, latent_mean, latent_logvar, hidden_state, precision = utl.update_encoding(encoder=encoder,
                                                                                               next_obs=state,
                                                                                               action=action,
                                                                                               reward=rew_raw,
                                                                                               done=None,
-                                                                                              hidden_state=hidden_state)
+                                                                                              hidden_state=hidden_state,
+                                                                                                         precision=precision)
 
             # add rewards
             returns_per_episode[range(num_processes), task_count] += rew_raw.view(-1)

@@ -126,21 +126,22 @@ def get_latent_for_policy(args, latent_sample=None, latent_mean=None, latent_log
     return latent
 
 
-def update_encoding(encoder, next_obs, action, reward, done, hidden_state):
+def update_encoding(encoder, next_obs, action, reward, done, hidden_state, precision):
     # reset hidden state of the recurrent net when we reset the task
     if done is not None:
-        hidden_state = encoder.reset_hidden(hidden_state, done)
+        hidden_state, precision = encoder.reset_hidden(hidden_state, precision, done)
 
     with torch.no_grad():
-        latent_sample, latent_mean, latent_logvar, hidden_state = encoder(actions=action.float(),
+        latent_sample, latent_mean, latent_logvar, hidden_state, new_precision = encoder(actions=action.float(),
                                                                           states=next_obs,
                                                                           rewards=reward,
                                                                           hidden_state=hidden_state,
+                                                                          precision=precision,
                                                                           return_prior=False)
 
     # TODO: move the sampling out of the encoder!
 
-    return latent_sample, latent_mean, latent_logvar, hidden_state
+    return latent_sample, latent_mean, latent_logvar, hidden_state, new_precision
 
 
 def seed(seed, deterministic_execution=False):

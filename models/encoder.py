@@ -26,7 +26,6 @@ class RNNEncoder(nn.Module):
                  reward_embed_size=5,
                  ):
         super(RNNEncoder, self).__init__()
-
         self.args = args
         self.latent_dim = latent_dim
         self.hidden_size = hidden_size
@@ -80,7 +79,7 @@ class RNNEncoder(nn.Module):
             mu = mu.repeat(num, 1)
             return eps.mul(std).add_(mu)
 
-    def reset_hidden(self, hidden_state, done):
+    def reset_hidden(self, hidden_state, precision, done):
         """ Reset the hidden state where the BAMDP was done (i.e., we get a new task) """
         if hidden_state.dim() != done.dim():
             if done.dim() == 2:
@@ -88,7 +87,9 @@ class RNNEncoder(nn.Module):
             elif done.dim() == 1:
                 done = done.unsqueeze(0).unsqueeze(2)
         hidden_state = hidden_state * (1 - done)
-        return hidden_state
+        if (done == 1).all():
+            precision = 1
+        return hidden_state, precision
 
     def prior(self, batch_size, sample=True):
 
@@ -110,9 +111,10 @@ class RNNEncoder(nn.Module):
         else:
             latent_sample = latent_mean
 
-        return latent_sample, latent_mean, latent_logvar, hidden_state
+        precision = torch.ones(latent_logvar.shape, dtype=torch.float32)
+        return latent_sample, latent_mean, latent_logvar, hidden_state, precision
 
-    def forward(self, actions, states, rewards, hidden_state, return_prior, sample=True, detach_every=None):
+    def forward(self, actions, states, rewards, hidden_state, precision, return_prior, sample=True, detach_every=None):
         """
         Actions, states, rewards should be given in form [sequence_len * batch_size * dim].
         For one-step predictions, sequence_len=1 and hidden_state!=None.
@@ -133,7 +135,7 @@ class RNNEncoder(nn.Module):
 
         if return_prior:
             # if hidden state is none, start with the prior
-            prior_sample, prior_mean, prior_logvar, prior_hidden_state = self.prior(actions.shape[1])
+            prior_sample, prior_mean, prior_logvar, prior_hidden_state, prior_precision = self.prior(actions.shape[1])
             hidden_state = prior_hidden_state.clone()
 
         # extract features for states, actions, rewards
@@ -166,7 +168,14 @@ class RNNEncoder(nn.Module):
 
         # outputs
         latent_mean = self.fc_mu(gru_h)
-        latent_logvar = self.fc_logvar(gru_h)
+        if precision is None:
+            precision = torch.ones(latent_mean.shape, dtype=torch.float32)
+        new_precision = F.softplus(self.fc_logvar(gru_h)) + precision
+        # print((1 / new_precision) + 0.000001)
+        latent_logvar = torch.log((1 / new_precision) + 0.000001)
+        # print(latent_logvar)
+        # print()
+
         if sample:
             latent_sample = self.reparameterise(latent_mean, latent_logvar)
         else:
@@ -175,10 +184,10 @@ class RNNEncoder(nn.Module):
         if return_prior:
             latent_sample = torch.cat((prior_sample, latent_sample))
             latent_mean = torch.cat((prior_mean, latent_mean))
-            latent_logvar = torch.cat((prior_logvar, latent_logvar))
+            latent_logvar = torch.cat((torch.log((1 / prior_precision) + 0.000001), latent_logvar))
             output = torch.cat((prior_hidden_state, output))
 
         if latent_mean.shape[0] == 1:
             latent_sample, latent_mean, latent_logvar = latent_sample[0], latent_mean[0], latent_logvar[0]
 
-        return latent_sample, latent_mean, latent_logvar, output
+        return latent_sample, latent_mean, latent_logvar, output, new_precision
