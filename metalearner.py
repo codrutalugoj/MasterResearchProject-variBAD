@@ -303,8 +303,8 @@ class MetaLearner:
 
         # for each process, get the current batch (zero-padded obs/act/rew + length indicators)
         prev_obs, next_obs, act, rew, lens = self.vae.rollout_storage.get_running_batch()
-
         # get embedding - will return (1+sequence_len) * batch * input_size -- includes the prior!
+        print('call encoder forward in encode_running_traj')
         all_latent_samples, all_latent_means, all_latent_logvars, all_hidden_states, all_precision = self.vae.encoder(actions=act,
                                                                                                        states=next_obs,
                                                                                                        rewards=rew,

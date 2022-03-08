@@ -111,7 +111,8 @@ class RNNEncoder(nn.Module):
         else:
             latent_sample = latent_mean
 
-        precision = torch.ones(latent_logvar.shape, dtype=torch.float32)
+        # precision = torch.ones(latent_logvar.shape, dtype=torch.float32)
+        precision = 1/torch.exp(latent_logvar)
         return latent_sample, latent_mean, latent_logvar, hidden_state, precision
 
     def forward(self, actions, states, rewards, hidden_state, precision, return_prior, sample=True, detach_every=None):
@@ -168,13 +169,18 @@ class RNNEncoder(nn.Module):
 
         # outputs
         latent_mean = self.fc_mu(gru_h)
+
         if precision is None:
             precision = torch.ones(latent_mean.shape, dtype=torch.float32)
-        new_precision = F.softplus(self.fc_logvar(gru_h)) + precision
-        # print((1 / new_precision) + 0.000001)
+
+        residual_precision = F.softplus(self.fc_logvar(gru_h))
+        new_precision = residual_precision + precision
+        if return_prior:
+            print('residual precision', residual_precision.shape)
+            print(new_precision.shape)
+            print()
+
         latent_logvar = torch.log((1 / new_precision) + 0.000001)
-        # print(latent_logvar)
-        # print()
 
         if sample:
             latent_sample = self.reparameterise(latent_mean, latent_logvar)
