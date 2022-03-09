@@ -175,6 +175,7 @@ class MetaLearner:
             # First, re-compute the hidden states given the current rollouts (since the VAE might've changed)
             with torch.no_grad():
                 latent_sample, latent_mean, latent_logvar, hidden_state, precision = self.encode_running_trajectory()
+            print("first prec", precision.shape)
 
             # add this initial hidden state to the policy storage
             assert len(self.policy_storage.latent_mean) == 0  # make sure we emptied buffers
@@ -211,6 +212,7 @@ class MetaLearner:
 
                 with torch.no_grad():
                     # compute next embedding (for next loop and/or value prediction bootstrap)
+                    print("rollout", precision.shape)
                     latent_sample, latent_mean, latent_logvar, hidden_state, precision = utl.update_encoding(
                         encoder=self.vae.encoder,
                         next_obs=next_state,
@@ -304,7 +306,6 @@ class MetaLearner:
         # for each process, get the current batch (zero-padded obs/act/rew + length indicators)
         prev_obs, next_obs, act, rew, lens = self.vae.rollout_storage.get_running_batch()
         # get embedding - will return (1+sequence_len) * batch * input_size -- includes the prior!
-        print('call encoder forward in encode_running_traj')
         all_latent_samples, all_latent_means, all_latent_logvars, all_hidden_states, all_precision = self.vae.encoder(actions=act,
                                                                                                        states=next_obs,
                                                                                                        rewards=rew,
