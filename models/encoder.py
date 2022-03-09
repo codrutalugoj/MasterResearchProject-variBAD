@@ -130,7 +130,7 @@ class RNNEncoder(nn.Module):
         For feeding in entire trajectories, sequence_len>1 and hidden_state=None.
         In the latter case, we return embeddings of length sequence_len+1 since they include the prior.
         """
-
+        # print("enc forward")
         # we do the action-normalisation (the the env bounds) here
         actions = utl.squash_action(actions, self.args)
 
@@ -180,16 +180,9 @@ class RNNEncoder(nn.Module):
 
         # outputs
         latent_mean = self.fc_mu(gru_h)
-
-        if precision is None:
-            print('precision is None')
-            precision = torch.zeros(1, *latent_mean.shape[1:], dtype=torch.float32).to(device) + 0.00001
-
         residual_precision = F.softplus(self.fc_logvar(gru_h))
 
-
         new_precision = torch.cumsum(residual_precision, dim=0)
-
 
         # print(new_precision, residual_precision, precision)
         latent_logvar = torch.log(1 / (new_precision))
