@@ -180,9 +180,14 @@ class RNNEncoder(nn.Module):
 
         # outputs
         latent_mean = self.fc_mu(gru_h)
-        residual_precision = F.softplus(self.fc_logvar(gru_h))
+        residual_precision = F.softplus(self.fc_logvar(gru_h)) * 0.05
 
-        new_precision = torch.cumsum(residual_precision, dim=0)
+        if precision is None:
+            new_precision = torch.cumsum(residual_precision, dim=0)
+        else:
+            new_precision = precision + residual_precision
+
+        lambda_gate = precision/new_precision
 
         # print(new_precision, residual_precision, precision)
         latent_logvar = torch.log(1 / (new_precision))
