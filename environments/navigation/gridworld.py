@@ -386,7 +386,7 @@ def plot_rew_reconstruction(env,
     plt.title('output - variance')
 
     plt.subplot(1, 3, 3)
-    rew_pred_entropy = -(test_rew_vars * np.log(test_rew_vars)).sum(axis=1)
+    rew_pred_entropy = -(test_rew_vars * np.log(test_rew_vars + 1e-7)).sum(axis=1)
     plt.plot(range(len(test_rew_vars)), rew_pred_entropy, 'r.-')
     for tj in np.cumsum([0, *[env._max_episode_steps for _ in range(num_rollouts)]]):
         span = rew_pred_entropy.max() - rew_pred_entropy.min()
