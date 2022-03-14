@@ -86,7 +86,8 @@ def evaluate(args,
                                                                                               reward=rew_raw,
                                                                                               done=None,
                                                                                               hidden_state=hidden_state,
-                                                                                                         precision=precision)
+                                                                                              old_means=latent_mean,
+                                                                                              precision=precision)
 
             # add rewards
             returns_per_episode[range(num_processes), task_count] += rew_raw.view(-1)

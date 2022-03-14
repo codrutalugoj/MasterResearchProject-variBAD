@@ -218,6 +218,7 @@ class MetaLearner:
                         reward=rew_raw,
                         done=done,
                         hidden_state=hidden_state,
+                        old_means=latent_mean,
                         precision=precision)
 
                 # before resetting, update the embedding and add to vae buffer
@@ -307,6 +308,7 @@ class MetaLearner:
                                                                                                        states=next_obs,
                                                                                                        rewards=rew,
                                                                                                        hidden_state=None,
+                                                                                                       old_means=None,
                                                                                                        precision=None,
                                                                                                        return_prior=True)
 

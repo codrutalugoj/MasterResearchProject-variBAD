@@ -126,16 +126,17 @@ def get_latent_for_policy(args, latent_sample=None, latent_mean=None, latent_log
     return latent
 
 
-def update_encoding(encoder, next_obs, action, reward, done, hidden_state, precision):
+def update_encoding(encoder, next_obs, action, reward, done, hidden_state, old_means, precision):
     # reset hidden state of the recurrent net when we reset the task
     if done is not None:
-        hidden_state, precision = encoder.reset_hidden(hidden_state, precision, done)
+        hidden_state, old_means, precision = encoder.reset_hidden(hidden_state, old_means, precision, done)
 
     with torch.no_grad():
         latent_sample, latent_mean, latent_logvar, hidden_state, new_precision = encoder(actions=action.float(),
                                                                           states=next_obs,
                                                                           rewards=reward,
                                                                           hidden_state=hidden_state,
+                                                                          old_means=old_means,
                                                                           precision=precision,
                                                                           return_prior=False)
 
@@ -188,6 +189,7 @@ def recompute_embeddings(
     h = policy_storage.hidden_states[0].detach()
     for i in range(policy_storage.actions.shape[0]):
         # reset hidden state of the GRU when we reset the task
+        print("why is this not getting called?")
         h = encoder.reset_hidden(h, policy_storage.done[i + 1])
 
         ts, tm, tl, h = encoder(policy_storage.actions.float()[i:i + 1],

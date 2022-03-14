@@ -299,6 +299,7 @@ class GridNavi(gym.Env):
                         state,
                         rew_raw.reshape((1, 1)).float().to(device),
                         hidden_state,
+                        old_means=curr_latent_mean,
                         precision=precision,
                         return_prior=False)
 

@@ -79,7 +79,7 @@ class RNNEncoder(nn.Module):
             mu = mu.repeat(num, 1)
             return eps.mul(std).add_(mu)
 
-    def reset_hidden(self, hidden_state, precision, done):
+    def reset_hidden(self, hidden_state, old_means, precision, done):
         """ Reset the hidden state where the BAMDP was done (i.e., we get a new task) """
         if hidden_state.dim() != done.dim():
             if done.dim() == 2:
@@ -89,7 +89,8 @@ class RNNEncoder(nn.Module):
         hidden_state = hidden_state * (1 - done)
         if (done == 1).all():
             precision = 1
-        return hidden_state, precision
+            old_means = 0
+        return hidden_state, old_means, precision
 
     def prior(self, batch_size, sample=True):
 
@@ -123,7 +124,7 @@ class RNNEncoder(nn.Module):
 
         return latent_sample, latent_mean, latent_logvar, hidden_state, precision
 
-    def forward(self, actions, states, rewards, hidden_state, precision, return_prior, sample=True, detach_every=None):
+    def forward(self, actions, states, rewards, hidden_state, precision, old_means, return_prior, sample=True, detach_every=None):
         """
         Actions, states, rewards should be given in form [sequence_len * batch_size * dim].
         For one-step predictions, sequence_len=1 and hidden_state!=None.
@@ -179,15 +180,17 @@ class RNNEncoder(nn.Module):
             gru_h = F.relu(self.fc_after_gru[i](gru_h))
 
         # outputs
-        latent_mean = self.fc_mu(gru_h)
+        new_means = self.fc_mu(gru_h)
         residual_precision = F.softplus(self.fc_logvar(gru_h)) * 0.05
 
         if precision is None:
             new_precision = torch.cumsum(residual_precision, dim=0)
+            latent_mean = new_means
+            # TODO: do no mu gating here since we only get into this if if we are at t=0
         else:
             new_precision = precision + residual_precision
-
-        lambda_gate = precision/new_precision
+            lambda_gate = precision/new_precision
+            latent_mean = lambda_gate * old_means + (1 - lambda_gate) * new_means
 
         # print(new_precision, residual_precision, precision)
         latent_logvar = torch.log(1 / (new_precision))

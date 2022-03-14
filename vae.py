@@ -535,6 +535,7 @@ class VaribadVAE:
                                                         states=vae_next_obs,
                                                         rewards=vae_rewards,
                                                         hidden_state=None,
+                                                        old_means=None,
                                                         precision=None,
                                                         return_prior=True,
                                                         detach_every=self.args.tbptt_stepsize if hasattr(self.args, 'tbptt_stepsize') else None,
