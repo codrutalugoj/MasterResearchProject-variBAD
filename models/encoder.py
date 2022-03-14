@@ -185,8 +185,11 @@ class RNNEncoder(nn.Module):
 
         if precision is None:
             new_precision = torch.cumsum(residual_precision, dim=0)
-            latent_mean = new_means
-            # TODO: do no mu gating here since we only get into this if if we are at t=0
+            tmp_precisions = torch.cat((prior_precision, new_precision))
+            tmp_means = torch.cat((prior_mean, new_means))
+            lambda_gate = tmp_precisions[:-1]/tmp_precisions[1:]
+            # print("lambda gate for full trajs", lambda_gate.shape, tmp_means.shape)
+            latent_mean = lambda_gate * tmp_means[:-1] + (1 - lambda_gate) * tmp_means[1:]
         else:
             new_precision = precision + residual_precision
             lambda_gate = precision/new_precision
