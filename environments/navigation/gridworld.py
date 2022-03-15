@@ -300,7 +300,7 @@ class GridNavi(gym.Env):
                         rew_raw.reshape((1, 1)).float().to(device),
                         hidden_state,
                         old_means=curr_latent_mean,
-                        precision=precision,
+                        old_precision=precision,
                         return_prior=False)
 
                     episode_latent_samples[episode_idx].append(curr_latent_sample[0].clone())

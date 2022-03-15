@@ -137,7 +137,7 @@ def update_encoding(encoder, next_obs, action, reward, done, hidden_state, old_m
                                                                           rewards=reward,
                                                                           hidden_state=hidden_state,
                                                                           old_means=old_means,
-                                                                          precision=precision,
+                                                                          old_precision=precision,
                                                                           return_prior=False)
 
     # TODO: move the sampling out of the encoder!

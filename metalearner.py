@@ -309,7 +309,7 @@ class MetaLearner:
                                                                                                        rewards=rew,
                                                                                                        hidden_state=None,
                                                                                                        old_means=None,
-                                                                                                       precision=None,
+                                                                                                       old_precision=None,
                                                                                                        return_prior=True)
 
         # get the embedding / hidden state of the current time step (need to do this since we zero-padded)

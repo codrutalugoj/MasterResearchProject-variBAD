@@ -124,7 +124,7 @@ class RNNEncoder(nn.Module):
 
         return latent_sample, latent_mean, latent_logvar, hidden_state, precision
 
-    def forward(self, actions, states, rewards, hidden_state, precision, old_means, return_prior, sample=True, detach_every=None):
+    def forward(self, actions, states, rewards, hidden_state, old_precision, old_means, return_prior, sample=True, detach_every=None):
         """
         Actions, states, rewards should be given in form [sequence_len * batch_size * dim].
         For one-step predictions, sequence_len=1 and hidden_state!=None.
@@ -183,7 +183,7 @@ class RNNEncoder(nn.Module):
         new_means = self.fc_mu(gru_h)
         residual_precision = F.softplus(self.fc_logvar(gru_h)) * 0.05
 
-        if precision is None:
+        if old_precision is None:
             new_precision = torch.cumsum(residual_precision, dim=0)
             tmp_precisions = torch.cat((prior_precision, new_precision))
             tmp_means = torch.cat((prior_mean, new_means))
@@ -191,8 +191,8 @@ class RNNEncoder(nn.Module):
             # print("lambda gate for full trajs", lambda_gate.shape, tmp_means.shape)
             latent_mean = lambda_gate * tmp_means[:-1] + (1 - lambda_gate) * tmp_means[1:]
         else:
-            new_precision = precision + residual_precision
-            lambda_gate = precision/new_precision
+            new_precision = old_precision + residual_precision
+            lambda_gate = old_precision / new_precision
             latent_mean = lambda_gate * old_means + (1 - lambda_gate) * new_means
 
         # print(new_precision, residual_precision, precision)
