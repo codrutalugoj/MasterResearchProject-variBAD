@@ -181,7 +181,7 @@ class RNNEncoder(nn.Module):
 
         # outputs
         new_means = self.fc_mu(gru_h)
-        residual_precision = F.softplus(self.fc_logvar(gru_h)) * 0.05
+        residual_precision = F.softplus(self.fc_logvar(gru_h)) # * 0.05
 
         if old_precision is None:
             new_precision = torch.cumsum(residual_precision, dim=0)

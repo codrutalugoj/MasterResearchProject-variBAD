@@ -243,8 +243,6 @@ class VaribadVAE:
             task_indices = torch.arange(batchsize).repeat(self.args.vae_subsample_elbos)
             kl_divergences = kl_divergences[elbo_indices, task_indices].reshape((self.args.vae_subsample_elbos, batchsize))
 
-        if len(kl_divergences.shape) > 2:
-            print("kl terms", kl_divergences[0, 0].item(), kl_divergences[1, 0].item())
         return kl_divergences
 
     def compute_loss(self, latent_mean, latent_logvar, vae_prev_obs, vae_next_obs, vae_actions,

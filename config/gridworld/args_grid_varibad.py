@@ -54,7 +54,7 @@ def get_args(rest_args):
 
     # other hyperparameters
     # TODO: lr_policy was 0.0007 0.01
-    parser.add_argument('--lr_policy', type=float, default=0.01, help='learning rate (default: 7e-4)')
+    parser.add_argument('--lr_policy', type=float, default=0.0007, help='learning rate (default: 7e-4)')
     parser.add_argument('--num_processes', type=int, default=16,
                         help='how many training CPU processes / parallel environments to use (default: 16)')
     parser.add_argument('--policy_num_steps', type=int, default=60,
@@ -98,7 +98,7 @@ def get_args(rest_args):
     parser.add_argument('--num_vae_updates', type=int, default=3,
                         help='how many VAE update steps to take per meta-iteration')
     parser.add_argument('--pretrain_len', type=int, default=0, help='for how many updates to pre-train the VAE')
-    parser.add_argument('--kl_weight', type=float, default=1, help='weight for the KL term')  # TODO: was 0.01
+    parser.add_argument('--kl_weight', type=float, default=0.01, help='weight for the KL term')  # TODO: was 0.01
 
     parser.add_argument('--split_batches_by_task', type=boolean_argument, default=False,
                         help='split batches up by task (to save memory or if tasks are of different length)')
