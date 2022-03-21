@@ -181,7 +181,7 @@ class RNNEncoder(nn.Module):
 
         # outputs
         new_means = self.fc_mu(gru_h)
-        residual_precision = F.softplus(self.fc_logvar(gru_h)) # * 0.05
+        residual_precision = F.softplus(self.fc_logvar(gru_h))  # * 0.05
 
         if old_precision is None:
             new_precision = torch.cumsum(residual_precision, dim=0)
@@ -189,11 +189,15 @@ class RNNEncoder(nn.Module):
             tmp_means = torch.cat((prior_mean, new_means))
             lambda_gate = tmp_precisions[:-1]/tmp_precisions[1:]
             # print("lambda gate for full trajs", lambda_gate.shape, tmp_means.shape)
-            latent_mean = lambda_gate * tmp_means[:-1] + (1 - lambda_gate) * tmp_means[1:]
+            # lamda mean gate
+            # latent_mean = lambda_gate * tmp_means[:-1] + (1 - lambda_gate) * tmp_means[1:]
+            latent_mean = new_means
         else:
             new_precision = old_precision + residual_precision
             lambda_gate = old_precision / new_precision
-            latent_mean = lambda_gate * old_means + (1 - lambda_gate) * new_means
+            # lamda mean gate
+            # latent_mean = lambda_gate * old_means + (1 - lambda_gate) * new_means
+            latent_mean = new_means
 
         # print(new_precision, residual_precision, precision)
         latent_logvar = torch.log(1 / (new_precision))
