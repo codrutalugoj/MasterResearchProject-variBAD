@@ -89,8 +89,9 @@ class RNNEncoder(nn.Module):
                 done = done.unsqueeze(0).unsqueeze(2)
         hidden_state = hidden_state * (1 - done)
         if (done == 1).all():
-            precision = torch.ones(precision.shape)
-            old_means = torch.zeros(old_means.shape)
+            print(' reset belief')
+            precision = torch.ones(precision.shape, device=device)
+            old_means = torch.zeros(old_means.shape, device=device)
         return hidden_state, old_means, precision
 
     def prior(self, batch_size, sample=True):
@@ -135,6 +136,7 @@ class RNNEncoder(nn.Module):
         # old_precision: None, 1, [1, 1, 5] / [1, 16, 5] / [16, 5] TODO: Why sometimes without sequence dimension?
         # old_mean: None, 0, [1, 5], [16, 5], [1, 16, 5]
 
+        # TODO: Why is the belief reset at step 59? Cause after the reset there is a forward pass.
         # before iter index
         # [1], [1, 1, 5],  [1, 5]
         # [16, 1], [1, 16, 5], [1, 16, 5] (1x)
