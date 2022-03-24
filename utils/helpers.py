@@ -128,7 +128,7 @@ def get_latent_for_policy(args, latent_sample=None, latent_mean=None, latent_log
 
 def update_encoding(encoder, next_obs, action, reward, done, hidden_state, old_means, precision):
     # reset hidden state of the recurrent net when we reset the task
-    print('update encoding')
+    # print('update encoding')
     if done is not None:
         hidden_state, old_means, precision = encoder.reset_hidden(hidden_state, old_means, precision, done)
 

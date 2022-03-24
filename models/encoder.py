@@ -89,7 +89,7 @@ class RNNEncoder(nn.Module):
                 done = done.unsqueeze(0).unsqueeze(2)
         hidden_state = hidden_state * (1 - done)
         if (done == 1).all():
-            print(' reset belief')
+            # print(' reset belief')
             precision = torch.ones(precision.shape, device=device)
             old_means = torch.zeros(old_means.shape, device=device)
         return hidden_state, old_means, precision
@@ -154,14 +154,14 @@ class RNNEncoder(nn.Module):
         # iter_idx = t+1
         # ...
 
-        print('env forward actions', actions.shape)
+        '''print('env forward actions', actions.shape)
         try:
             if (old_precision is not None) & (old_means is not None):
                 print("enc forward", return_prior, old_precision.shape, old_means.shape)
             else:
                 print("enc forward", return_prior, old_precision, old_means)
         except:
-            print("enc forward", return_prior, old_precision, old_means)
+            print("enc forward", return_prior, old_precision, old_means)'''
 
         # we do the action-normalisation (the the env bounds) here
         actions = utl.squash_action(actions, self.args)
@@ -255,6 +255,6 @@ class RNNEncoder(nn.Module):
             latent_sample, latent_mean, latent_logvar, new_precision = \
                 latent_sample[0], latent_mean[0], latent_logvar[0], new_precision[0]
 
-        print("enc forward out", new_precision.shape, latent_mean.shape)
-        print()
+        # print("enc forward out", new_precision.shape, latent_mean.shape)
+        # print()
         return latent_sample, latent_mean, latent_logvar, output, new_precision
