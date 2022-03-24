@@ -45,6 +45,7 @@ class RNNEncoder(nn.Module):
 
         # recurrent unit
         # TODO: TEST RNN vs GRU vs LSTM
+        # curr_input_dim=16, hidden_size=64
         self.gru = nn.GRU(input_size=curr_input_dim,
                           hidden_size=hidden_size,
                           num_layers=1,
@@ -88,8 +89,8 @@ class RNNEncoder(nn.Module):
                 done = done.unsqueeze(0).unsqueeze(2)
         hidden_state = hidden_state * (1 - done)
         if (done == 1).all():
-            precision = 1
-            old_means = 0
+            precision = torch.ones(precision.shape)
+            old_means = torch.zeros(old_means.shape)
         return hidden_state, old_means, precision
 
     def prior(self, batch_size, sample=True):
@@ -131,7 +132,35 @@ class RNNEncoder(nn.Module):
         For feeding in entire trajectories, sequence_len>1 and hidden_state=None.
         In the latter case, we return embeddings of length sequence_len+1 since they include the prior.
         """
-        # print("enc forward")
+        # old_precision: None, 1, [1, 1, 5] / [1, 16, 5] / [16, 5] TODO: Why sometimes without sequence dimension?
+        # old_mean: None, 0, [1, 5], [16, 5], [1, 16, 5]
+
+        # before iter index
+        # [1], [1, 1, 5],  [1, 5]
+        # [16, 1], [1, 16, 5], [1, 16, 5] (1x)
+        # [16, 1], [1, 16, 5], [16, 5]
+
+        # iter_idx = t
+        #   in: act[60, 16, 1], None, None (1x)  # return_prior=True, call from encode_running_trajectory
+        #   out:  [61, 16, 5], [61, 16, 5]  # this is broken down to contain sequence_len=1
+        # step= 0 ... 59
+        #   in: act[16, 1], [16, 5], [16, 5]
+        #   out: [16, 5], [16, 5]
+        # UPDATE
+        #   in: [60, 25, 1], None, None (4x)
+        #   out: [61, 25, 5], [61, 25, 5]
+        # iter_idx = t+1
+        # ...
+
+        print('env forward actions', actions.shape)
+        try:
+            if (old_precision is not None) & (old_means is not None):
+                print("enc forward", return_prior, old_precision.shape, old_means.shape)
+            else:
+                print("enc forward", return_prior, old_precision, old_means)
+        except:
+            print("enc forward", return_prior, old_precision, old_means)
+
         # we do the action-normalisation (the the env bounds) here
         actions = utl.squash_action(actions, self.args)
 
@@ -156,14 +185,17 @@ class RNNEncoder(nn.Module):
         hs = self.state_encoder(states)
         hr = self.reward_encoder(rewards)
         h = torch.cat((ha, hs, hr), dim=2)
-
+        # print(' h', h.shape)
         # forward through fully connected layers before GRU
         for i in range(len(self.fc_before_gru)):
             h = F.relu(self.fc_before_gru[i](h))
 
         if detach_every is None:
             # GRU cell (output is outputs for each time step, hidden_state is last output)
+            # h.shape: [1, 16, 16] / [60, 16, 16]
+            # hidden_state.shape: [1, 16, 64] / [1, 16, 64] # 64=gru_hidden_size
             output, _ = self.gru(h, hidden_state)
+            # output.shape: [1, 16, 16] / [60, 16, 16]
         else:
             output = []
             for i in range(int(np.ceil(h.shape[0] / detach_every))):
@@ -182,6 +214,7 @@ class RNNEncoder(nn.Module):
         # outputs
         new_means = self.fc_mu(gru_h)
         residual_precision = F.softplus(self.fc_logvar(gru_h))  # * 0.05
+        # print(' res._precision/new_means', residual_precision.shape, new_means.shape)
 
         if old_precision is None:
             new_precision = torch.cumsum(residual_precision, dim=0)
@@ -192,12 +225,14 @@ class RNNEncoder(nn.Module):
             # lamda mean gate
             latent_mean = lambda_gate * tmp_means[:-1] + (1 - lambda_gate) * tmp_means[1:]
             # latent_mean = new_means
+
         else:
             new_precision = old_precision + residual_precision
             lambda_gate = old_precision / new_precision
             # lamda mean gate
             latent_mean = lambda_gate * old_means + (1 - lambda_gate) * new_means
             # latent_mean = new_means
+
 
         # print(new_precision, residual_precision, precision)
         latent_logvar = torch.log(1 / (new_precision))
@@ -214,7 +249,10 @@ class RNNEncoder(nn.Module):
             new_precision = torch.cat((prior_precision, new_precision))
             output = torch.cat((prior_hidden_state, output))
 
-        if latent_mean.shape[0] == 1:
-            latent_sample, latent_mean, latent_logvar = latent_sample[0], latent_mean[0], latent_logvar[0]
+        if latent_mean.shape[0] == 1:  # TODO: Do this for precision as well.
+            latent_sample, latent_mean, latent_logvar, new_precision = \
+                latent_sample[0], latent_mean[0], latent_logvar[0], new_precision[0]
 
+        print("enc forward out", new_precision.shape, latent_mean.shape)
+        print()
         return latent_sample, latent_mean, latent_logvar, output, new_precision

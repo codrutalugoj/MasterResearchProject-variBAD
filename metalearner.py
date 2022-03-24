@@ -171,7 +171,7 @@ class MetaLearner:
             self.log(None, None, start_time)
 
         for self.iter_idx in range(self.num_updates):
-
+            print('iter idx', self.iter_idx)
             # First, re-compute the hidden states given the current rollouts (since the VAE might've changed)
             with torch.no_grad():
                 latent_sample, latent_mean, latent_logvar, hidden_state, precision = self.encode_running_trajectory()
@@ -185,7 +185,7 @@ class MetaLearner:
 
             # rollout policies for a few steps
             for step in range(self.args.policy_num_steps):
-
+                print('step', step)
                 # sample actions from policy
                 with torch.no_grad():
                     value, action = utl.select_action(
@@ -267,6 +267,7 @@ class MetaLearner:
                 self.frames += self.args.num_processes
 
             # --- UPDATE ---
+            print('UPDATE')
 
             if self.args.precollect_len <= self.frames:
 
@@ -301,6 +302,7 @@ class MetaLearner:
         Returns sample/mean/logvar and hidden state (if applicable) for the current timestep.
         :return:
         """
+        print('encode running trajectory')
         # for each process, get the current batch (zero-padded obs/act/rew + length indicators)
         prev_obs, next_obs, act, rew, lens = self.vae.rollout_storage.get_running_batch()
         # get embedding - will return (1+sequence_len) * batch * input_size -- includes the prior!
@@ -311,6 +313,7 @@ class MetaLearner:
                                                                                                        old_means=None,
                                                                                                        old_precision=None,
                                                                                                        return_prior=True)
+        # print(' precision/mean', all_latent_means.shape, all_latent_logvars.shape)
 
         # get the embedding / hidden state of the current time step (need to do this since we zero-padded)
         latent_sample = (torch.stack([all_latent_samples[lens[i]][i] for i in range(len(lens))])).to(device)
@@ -319,6 +322,7 @@ class MetaLearner:
         hidden_state = (torch.stack([all_hidden_states[lens[i]][i] for i in range(len(lens))])).to(device)
         precision = (torch.stack([all_precision[lens[i]][i] for i in range(len(lens))])).to(device)
 
+        # print(' precision/mean', precision.shape, latent_mean.shape)
         return latent_sample, latent_mean, latent_logvar, hidden_state, precision
 
     def get_value(self, state, belief, task, latent_sample, latent_mean, latent_logvar):
