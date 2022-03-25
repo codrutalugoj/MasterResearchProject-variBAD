@@ -5,6 +5,7 @@ import torch.nn as nn
 from torch.nn import functional as F
 
 from utils import helpers as utl
+from models.meta_mu import MetaMu
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -50,6 +51,9 @@ class RNNEncoder(nn.Module):
                           hidden_size=hidden_size,
                           num_layers=1,
                           )
+        self.metaMu = MetaMu(input_size=curr_input_dim,
+                             hidden_size=hidden_size,
+                             latent_dim=latent_dim)
 
         for name, param in self.gru.named_parameters():
             if 'bias' in name:
@@ -95,6 +99,8 @@ class RNNEncoder(nn.Module):
         return hidden_state, old_means, precision
 
     def prior(self, batch_size, sample=True):
+        print('ENCODER PRIOR')
+        raise NotImplementedError('encoder prior needs to do forward pass through metaMu instead of fc_mu and fc_logvar')
 
         # TODO: add option to incorporate the initial state
 
@@ -187,7 +193,7 @@ class RNNEncoder(nn.Module):
         hs = self.state_encoder(states)
         hr = self.reward_encoder(rewards)
         h = torch.cat((ha, hs, hr), dim=2)
-        # print(' h', h.shape)
+        print(' h', h.shape)
         # forward through fully connected layers before GRU
         for i in range(len(self.fc_before_gru)):
             h = F.relu(self.fc_before_gru[i](h))
@@ -196,7 +202,11 @@ class RNNEncoder(nn.Module):
             # GRU cell (output is outputs for each time step, hidden_state is last output)
             # h.shape: [1, 16, 16] / [60, 16, 16]
             # hidden_state.shape: [1, 16, 64] / [1, 16, 64] # 64=gru_hidden_size
-            output, _ = self.gru(h, hidden_state)
+            # output, _ = self.gru(h, hidden_state)
+            output, _, new_mean, new_precision = self.metaMu(h,
+                                                             hidden_state,
+                                                             old_means,
+                                                             old_precision)
             # output.shape: [1, 16, 16] / [60, 16, 16]
         else:
             output = []
@@ -214,28 +224,8 @@ class RNNEncoder(nn.Module):
             gru_h = F.relu(self.fc_after_gru[i](gru_h))
 
         # outputs
-        new_means = self.fc_mu(gru_h)
-        residual_precision = F.softplus(self.fc_logvar(gru_h))  # * 0.05
-        # print(' res._precision/new_means', residual_precision.shape, new_means.shape)
 
-        if old_precision is None:
-            new_precision = torch.cumsum(residual_precision, dim=0)
-            tmp_precisions = torch.cat((prior_precision, new_precision))
-            tmp_means = torch.cat((prior_mean, new_means))
-            lambda_gate = tmp_precisions[:-1]/tmp_precisions[1:]
-            # print("lambda gate for full trajs", lambda_gate.shape, tmp_means.shape)
-            # lamda mean gate
-            latent_mean = lambda_gate * tmp_means[:-1] + (1 - lambda_gate) * tmp_means[1:]
-            # latent_mean = new_means
-        else:
-            new_precision = old_precision + residual_precision
-            lambda_gate = old_precision / new_precision
-            # lamda mean gate
-            latent_mean = lambda_gate * old_means + (1 - lambda_gate) * new_means
-            # latent_mean = new_means
-
-
-        # print(new_precision, residual_precision, precision)
+        latent_mean = new_mean
         latent_logvar = torch.log(1 / (new_precision))
 
         if sample:
@@ -254,6 +244,6 @@ class RNNEncoder(nn.Module):
             latent_sample, latent_mean, latent_logvar, new_precision = \
                 latent_sample[0], latent_mean[0], latent_logvar[0], new_precision[0]
 
-        # print("enc forward out", new_precision.shape, latent_mean.shape)
+        # print("enc forward out", new_precision, latent_mean, latent_logvar)
         # print()
         return latent_sample, latent_mean, latent_logvar, output, new_precision
