@@ -225,14 +225,14 @@ class RNNEncoder(nn.Module):
             lambda_gate = tmp_precisions[:-1]/tmp_precisions[1:]
             # print("lambda gate for full trajs", lambda_gate.shape, tmp_means.shape)
             # lamda mean gate
-            latent_mean = lambda_gate * tmp_means[:-1] + (1 - lambda_gate) * tmp_means[1:]
-            # latent_mean = new_means
+            # latent_mean = lambda_gate * tmp_means[:-1] + (1 - lambda_gate) * tmp_means[1:]
+            latent_mean = new_means
         else:
             new_precision = old_precision + residual_precision
             lambda_gate = old_precision / new_precision
             # lamda mean gate
-            latent_mean = lambda_gate * old_means + (1 - lambda_gate) * new_means
-            # latent_mean = new_means
+            # latent_mean = lambda_gate * old_means + (1 - lambda_gate) * new_means
+            latent_mean = new_means
 
 
         # print(new_precision, residual_precision, precision)
