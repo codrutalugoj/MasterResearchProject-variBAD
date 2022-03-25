@@ -90,8 +90,8 @@ class RNNEncoder(nn.Module):
         hidden_state = hidden_state * (1 - done)
         if (done == 1).all():
             # print(' reset belief')
-            precision = torch.ones(precision.shape, device=device)
-            old_means = torch.zeros(old_means.shape, device=device)
+            precision = torch.ones_like(precision, device=device)
+            old_means = torch.zeros_like(old_means, device=device)
         return hidden_state, old_means, precision
 
     def prior(self, batch_size, sample=True):
@@ -227,7 +227,6 @@ class RNNEncoder(nn.Module):
             # lamda mean gate
             latent_mean = lambda_gate * tmp_means[:-1] + (1 - lambda_gate) * tmp_means[1:]
             # latent_mean = new_means
-
         else:
             new_precision = old_precision + residual_precision
             lambda_gate = old_precision / new_precision
@@ -251,7 +250,7 @@ class RNNEncoder(nn.Module):
             new_precision = torch.cat((prior_precision, new_precision))
             output = torch.cat((prior_hidden_state, output))
 
-        if latent_mean.shape[0] == 1:  # TODO: Do this for precision as well.
+        if latent_mean.shape[0] == 1:  # TODO: Do this for precision as well. Done
             latent_sample, latent_mean, latent_logvar, new_precision = \
                 latent_sample[0], latent_mean[0], latent_logvar[0], new_precision[0]
 
