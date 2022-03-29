@@ -168,12 +168,12 @@ class MetaLearner:
 
         # log once before training
         with torch.no_grad():
-            print('log')
+            # print('log')
             self.log(None, None, start_time)
-            print('post log')
-        exit()
+            # print('post log')
+
         for self.iter_idx in range(self.num_updates):
-            print('iter idx', self.iter_idx)
+            # print(f'iter idx {self.iter_idx} / {self.num_updates}')
             # First, re-compute the hidden states given the current rollouts (since the VAE might've changed)
             with torch.no_grad():
                 latent_sample, latent_mean, latent_logvar, hidden_state, precision = self.encode_running_trajectory()
@@ -187,7 +187,7 @@ class MetaLearner:
 
             # rollout policies for a few steps
             for step in range(self.args.policy_num_steps):
-                print('step', step)
+                # print(' step', step)
                 # sample actions from policy
                 with torch.no_grad():
                     value, action = utl.select_action(
@@ -374,7 +374,6 @@ class MetaLearner:
         # --- visualise behaviour of policy ---
 
         if (self.iter_idx + 1) % self.args.vis_interval == 0:
-            print('pre visualize behavior')
             ret_rms = self.envs.venv.ret_rms if self.args.norm_rew_for_policy else None
             utl_eval.visualise_behaviour(args=self.args,
                                          policy=self.policy,
@@ -391,7 +390,6 @@ class MetaLearner:
                                          compute_kl_loss=self.vae.compute_kl_loss,
                                          tasks=self.train_tasks,
                                          )
-            print('post visualize behavior')
 
         # --- evaluate policy ----
 
@@ -490,6 +488,11 @@ class MetaLearner:
                     self.logger.add('weights/{}'.format(name), param_mean, self.iter_idx)
                     if name == 'policy':
                         self.logger.add('weights/policy_std', param_list[0].data.mean(), self.iter_idx)
+
+                    '''for i, (name, param) in enumerate(model.named_parameters()):
+                        print(name, param.grad.shape if param.grad is not None else 'None',
+                              param_list[i].grad.shape if param_list[i].grad is not None else 'None')'''
+
                     if param_list[0].grad is not None:
                         param_grad_mean = np.mean([param_list[i].grad.cpu().numpy().mean() for i in range(len(param_list))])
                         self.logger.add('gradients/{}'.format(name), param_grad_mean, self.iter_idx)

@@ -56,8 +56,8 @@ def evaluate(args,
     if encoder is not None:
         # reset latent state to prior
         latent_sample, latent_mean, latent_logvar, hidden_state, precision = encoder.prior(num_processes)
-        print('   eval prec', precision.shape)
-        print('   eval mean', latent_mean.shape)
+        # print('   eval prec', precision.shape)
+        # print('   eval mean', latent_mean.shape)
     else:
         latent_sample = latent_mean = latent_logvar = hidden_state = None
 

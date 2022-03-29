@@ -28,6 +28,7 @@ class RNNEncoder(nn.Module):
                  ):
         super(RNNEncoder, self).__init__()
         self.args = args
+        self.input_dim = action_embed_dim + state_embed_dim + reward_embed_size
         self.latent_dim = latent_dim
         self.hidden_size = hidden_size
         self.reparameterise = self._sample_gaussian
@@ -47,19 +48,26 @@ class RNNEncoder(nn.Module):
         # recurrent unit
         # TODO: TEST RNN vs GRU vs LSTM
         # curr_input_dim=16, hidden_size=64
-        self.gru = nn.GRU(input_size=curr_input_dim,
+        '''self.gru = nn.GRU(input_size=curr_input_dim,
                           hidden_size=hidden_size,
                           num_layers=1,
-                          )
-        self.metaMu = MetaMu(input_size=curr_input_dim,
-                             hidden_size=hidden_size,
-                             latent_dim=latent_dim)
+                          )'''
 
-        for name, param in self.gru.named_parameters():
+        '''or name, param in self.gru.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0)
             elif 'weight' in name:
-                nn.init.orthogonal_(param)
+                nn.init.orthogonal_(param)'''
+
+        '''self.metaMu = torch.jit.script(MetaMu(
+            input_size=curr_input_dim,
+            hidden_size=hidden_size,
+            latent_dim=latent_dim))'''
+
+        self.metaMu = MetaMu(
+            input_size=curr_input_dim,
+            hidden_size=hidden_size,
+            latent_dim=latent_dim)
 
         # fully connected layers after the recurrent cell
         curr_input_dim = hidden_size
@@ -69,8 +77,8 @@ class RNNEncoder(nn.Module):
             curr_input_dim = layers_after_gru[i]
 
         # output layer
-        self.fc_mu = nn.Linear(curr_input_dim, latent_dim)
-        self.fc_logvar = nn.Linear(curr_input_dim, latent_dim)
+        # self.fc_mu = nn.Linear(curr_input_dim, latent_dim)
+        # self.fc_logvar = nn.Linear(curr_input_dim, latent_dim)
 
     def _sample_gaussian(self, mu, logvar, num=None):
         if num is None:
@@ -99,20 +107,29 @@ class RNNEncoder(nn.Module):
         return hidden_state, old_means, precision
 
     def prior(self, batch_size, sample=True):
-        print('ENCODER PRIOR')
-        raise NotImplementedError('encoder prior needs to do forward pass through metaMu instead of fc_mu and fc_logvar')
 
         # TODO: add option to incorporate the initial state
 
         # we start out with a hidden state of zero
+        x = torch.zeros((1, batch_size, self.input_dim), requires_grad=True).to(device)
         hidden_state = torch.zeros((1, batch_size, self.hidden_size), requires_grad=True).to(device)
+        old_means = torch.zeros((1, batch_size, self.latent_dim), requires_grad=True).to(device)
+        old_precision = torch.ones((1, batch_size, self.latent_dim), requires_grad=True).to(device)
 
         h = hidden_state
         # forward through fully connected layers after GRU
         for i in range(len(self.fc_after_gru)):
             h = F.relu(self.fc_after_gru[i](h))
 
-        # outputs
+        output, _, new_mean, new_precision = self.metaMu(x,
+                                                         hidden_state,
+                                                         old_means,
+                                                         old_precision)
+
+        latent_mean = new_mean
+        latent_logvar = torch.log(1 / (new_precision))
+
+        '''# outputs
         latent_mean = self.fc_mu(h)
 
         # TODO: here we need to get the prior precision from the network
@@ -123,14 +140,14 @@ class RNNEncoder(nn.Module):
         # print("softplus", precision)
         # print("relu", precision_relu)
 
-        latent_logvar = torch.log(1/precision)
+        latent_logvar = torch.log(1/precision)'''
 
         if sample:
             latent_sample = self.reparameterise(latent_mean, latent_logvar)
         else:
             latent_sample = latent_mean
 
-        return latent_sample, latent_mean, latent_logvar, hidden_state, precision
+        return latent_sample, latent_mean, latent_logvar, hidden_state, new_precision
 
     def forward(self, actions, states, rewards, hidden_state, old_precision, old_means, return_prior, sample=True, detach_every=None):
         """
@@ -193,10 +210,14 @@ class RNNEncoder(nn.Module):
         hs = self.state_encoder(states)
         hr = self.reward_encoder(rewards)
         h = torch.cat((ha, hs, hr), dim=2)
-        print(' h', h.shape)
         # forward through fully connected layers before GRU
         for i in range(len(self.fc_before_gru)):
             h = F.relu(self.fc_before_gru[i](h))
+
+        if old_means is None:
+            batch_size = h.shape[1]
+            old_means = torch.zeros((batch_size, self.latent_dim), requires_grad=True).to(device)
+            old_precision = torch.ones((batch_size, self.latent_dim), requires_grad=True).to(device)
 
         if detach_every is None:
             # GRU cell (output is outputs for each time step, hidden_state is last output)
@@ -224,7 +245,6 @@ class RNNEncoder(nn.Module):
             gru_h = F.relu(self.fc_after_gru[i](gru_h))
 
         # outputs
-
         latent_mean = new_mean
         latent_logvar = torch.log(1 / (new_precision))
 
