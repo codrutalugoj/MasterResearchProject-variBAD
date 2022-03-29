@@ -7,10 +7,11 @@ import torch.nn.functional as F
 
 class MetaMu(nn.Module):
 
-    def __init__(self, input_size, hidden_size, latent_dim, mid_size=10, sparse=None):
+    def __init__(self, input_size, hidden_size, latent_dim, mid_size=10, sparse=None, device='cpu'):
         super().__init__()
         self.hidden_size = hidden_size
         self.latent_dim = latent_dim
+        self.device = device
         concat_size = input_size + hidden_size
 
         self.linear_i = nn.Linear(in_features=concat_size, out_features=latent_dim)
@@ -47,9 +48,9 @@ class MetaMu(nn.Module):
         seq_len = x.shape[0]
         batch = x.shape[1]
 
-        outputs = torch.zeros((seq_len, batch, self.hidden_size))
-        out_means = torch.zeros((seq_len, batch, self.latent_dim))
-        out_precisions = torch.zeros((seq_len, batch, self.latent_dim))
+        outputs = torch.zeros((seq_len, batch, self.hidden_size), device=self.device)
+        out_means = torch.zeros((seq_len, batch, self.latent_dim), device=self.device)
+        out_precisions = torch.zeros((seq_len, batch, self.latent_dim), device=self.device)
 
         h_new = h_old[0]
         for t in range(seq_len):

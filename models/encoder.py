@@ -67,7 +67,8 @@ class RNNEncoder(nn.Module):
         self.metaMu = MetaMu(
             input_size=curr_input_dim,
             hidden_size=hidden_size,
-            latent_dim=latent_dim)
+            latent_dim=latent_dim,
+            device=device)
 
         # fully connected layers after the recurrent cell
         curr_input_dim = hidden_size
