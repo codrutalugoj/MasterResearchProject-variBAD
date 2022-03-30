@@ -45,7 +45,7 @@ class RNNEncoder(nn.Module):
 
         # recurrent unit
         # TODO: TEST RNN vs GRU vs LSTM
-        self.gru = nn.GRU(input_size=curr_input_dim,
+        '''self.gru = nn.GRU(input_size=curr_input_dim,
                           hidden_size=hidden_size,
                           num_layers=1,
                           )
@@ -54,7 +54,9 @@ class RNNEncoder(nn.Module):
             if 'bias' in name:
                 nn.init.constant_(param, 0)
             elif 'weight' in name:
-                nn.init.orthogonal_(param)
+                nn.init.orthogonal_(param)'''
+
+        self.replacing_gru = nn.Linear(curr_input_dim, hidden_size)
 
         # fully connected layers after the recurrent cell
         curr_input_dim = hidden_size
@@ -163,7 +165,12 @@ class RNNEncoder(nn.Module):
 
         if detach_every is None:
             # GRU cell (output is outputs for each time step, hidden_state is last output)
-            output, _ = self.gru(h, hidden_state)
+            # output, _ = self.gru(h, hidden_state)
+            seq_len = h.shape[0]
+            batch = h.shape[1]
+            output = torch.tanh(self.replacing_gru(h.view(-1, h.shape[-1])))
+
+            output = output.view(seq_len, batch, -1)
         else:
             output = []
             for i in range(int(np.ceil(h.shape[0] / detach_every))):
