@@ -53,7 +53,7 @@ class RNNEncoder(nn.Module):
                           num_layers=1,
                           )'''
 
-        '''or name, param in self.gru.named_parameters():
+        '''for name, param in self.gru.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0)
             elif 'weight' in name:
@@ -70,6 +70,12 @@ class RNNEncoder(nn.Module):
             latent_dim=latent_dim,
             sparse=False,
             device=device)
+
+        for name, param in self.metaMu.named_parameters():
+            if 'bias' in name:
+                nn.init.constant_(param, 0)
+            elif 'weight' in name:
+                nn.init.orthogonal_(param)
 
         # fully connected layers after the recurrent cell
         curr_input_dim = hidden_size
