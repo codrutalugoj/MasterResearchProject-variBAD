@@ -31,12 +31,12 @@ class MetaMu(nn.Module):
         if mean_old and precision_old is None:
             generate a prior here.
         """
-        print('   metaMu')
+        '''print('   metaMu')
         print('     x:', x.shape) #  [1, 16, 16] / [60, 16, 16]
         print('     h_old:', h_old.shape) #  [1, 16, 64] / [1, 16, 64] # 64=gru_hidden_size
         print('     mean_old:', old_mean.shape)
         print('     prec._old:', old_precision.shape)
-        stime = time.time()
+        stime = time.time()'''
 
         if len(old_mean.shape) == 2:
             old_mean = old_mean.unsqueeze(0)  # add sequence len dimension
@@ -55,11 +55,11 @@ class MetaMu(nn.Module):
         h_new = h_old[0]
         for t in range(seq_len):
             cat_inpt = torch.cat((x[t], h_new), -1)
-            print('       cat_input', cat_inpt.shape)
+            # print('       cat_input', cat_inpt.shape)
             precision_update_gate = self.gate_f(self.linear_i(cat_inpt))
             precision_update = F.softplus(self.linear_c(cat_inpt))
-            print('       prec update gate', precision_update_gate.shape)
-            print('       prec update', precision_update.shape)
+            # print('       prec update gate', precision_update_gate.shape)
+            # print('       prec update', precision_update.shape)
             out_precisions[t] = old_precision + precision_update_gate * precision_update
             # print(' out prec', out_precisions[t])
 
@@ -76,5 +76,5 @@ class MetaMu(nn.Module):
             old_mean = out_means[t].clone()
 
         # print('     output', out_means, out_precisions)
-        print('     exc time ', round(time.time() - stime, 5))
+        # print('     exc time ', round(time.time() - stime, 5))
         return outputs, h_new, out_means, out_precisions
