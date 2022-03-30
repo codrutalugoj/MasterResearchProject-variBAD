@@ -68,6 +68,7 @@ class RNNEncoder(nn.Module):
             input_size=curr_input_dim,
             hidden_size=hidden_size,
             latent_dim=latent_dim,
+            sparse=False,
             device=device)
 
         # fully connected layers after the recurrent cell
