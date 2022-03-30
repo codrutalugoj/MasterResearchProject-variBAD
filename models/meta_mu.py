@@ -68,7 +68,7 @@ class MetaMu(nn.Module):
             out_means[t] = mean_gate * old_mean + (1 - mean_gate) * mean_update
 
             # TODO: replace softplus with tanh
-            h_new = self.outl2(torch.tanh(self.outl1(torch.cat((cat_inpt, out_means[t], 1 / out_precisions[t]), -1))))
+            h_new = torch.tanh(self.outl2(torch.tanh(self.outl1(torch.cat((cat_inpt, out_means[t], 1 / out_precisions[t]), -1)))))
             outputs[t] = h_new
 
             # TODO: Could this cause a problem through call-by-reference?
