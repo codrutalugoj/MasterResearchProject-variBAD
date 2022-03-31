@@ -243,6 +243,7 @@ class RNNEncoder(nn.Module):
         else:
             latent_sample = latent_mean
 
+
         if return_prior:
             latent_sample = torch.cat((prior_sample, latent_sample))
             latent_mean = torch.cat((prior_mean, latent_mean))
