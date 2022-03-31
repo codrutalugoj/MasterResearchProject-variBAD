@@ -64,10 +64,13 @@ class RNNEncoder(nn.Module):
             hidden_size=hidden_size,
             latent_dim=latent_dim))'''
 
+        print('hidden_size', hidden_size)
+        exit()
         self.metaMu = MetaMu(
             input_size=curr_input_dim,
             hidden_size=hidden_size,
             latent_dim=latent_dim,
+            mid_size=latent_dim,
             sparse=False,
             device=device)
 
