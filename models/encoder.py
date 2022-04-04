@@ -127,6 +127,11 @@ class RNNEncoder(nn.Module):
         actions = actions.reshape((-1, *actions.shape[-2:]))
         states = states.reshape((-1, *states.shape[-2:]))
         rewards = rewards.reshape((-1, *rewards.shape[-2:]))
+        print('encoder reward input', rewards.shape)
+
+        # TODO: Insert probabilistic reward here
+        # https://stackoverflow.com/questions/43988546/apply-function-along-axis-over-two-numpy-arrays-shapes-not-aligned
+
         if hidden_state is not None:
             # if the sequence_len is one, this will add a dimension at dim 0 (otherwise will be the same)
             hidden_state = hidden_state.reshape((-1, *hidden_state.shape[-2:]))
