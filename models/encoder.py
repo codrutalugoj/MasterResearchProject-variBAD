@@ -68,6 +68,8 @@ class RNNEncoder(nn.Module):
         self.fc_mu = nn.Linear(curr_input_dim, latent_dim)
         self.fc_logvar = nn.Linear(curr_input_dim, latent_dim)
 
+        self.learnable_vars = nn.Parameter(torch.ones(1, 1, latent_dim))
+
     def _sample_gaussian(self, mu, logvar, num=None):
         if num is None:
             std = torch.exp(0.5 * logvar)
@@ -110,12 +112,10 @@ class RNNEncoder(nn.Module):
         latent_mean = self.fc_mu(h)
 
         # TODO: here we need to get the prior precision from the network
-        precision = self.fc_logvar(h)
+        # precision = self.fc_logvar(h)
+        # precision = F.softplus(precision)
 
-        precision = F.softplus(precision)
-        # precision_relu = F.relu(precision)
-        # print("softplus", precision)
-        # print("relu", precision_relu)
+        precision = self.learnable_vars.expand((-1, batch_size, -1))
 
         latent_logvar = torch.log(1/precision)
 
@@ -250,6 +250,8 @@ class RNNEncoder(nn.Module):
             latent_logvar = torch.cat((torch.log(1 / prior_precision), latent_logvar))
             new_precision = torch.cat((prior_precision, new_precision))
             output = torch.cat((prior_hidden_state, output))
+            #print(prior_logvar.requires_grad, prior_mean.requires_grad)
+            #print(latent_logvar.requires_grad, latent_mean.requires_grad)
 
         if latent_mean.shape[0] == 1:  # TODO: Do this for precision as well. Done
             latent_sample, latent_mean, latent_logvar, new_precision = \

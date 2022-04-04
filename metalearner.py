@@ -267,7 +267,7 @@ class MetaLearner:
                 self.frames += self.args.num_processes
 
             # --- UPDATE ---
-            # print('UPDATE')
+            # print('update')
 
             if self.args.precollect_len <= self.frames:
 
