@@ -85,6 +85,8 @@ class RNNEncoder(nn.Module):
             self.fc_after_gru.append(nn.Linear(curr_input_dim, layers_after_gru[i]))
             curr_input_dim = layers_after_gru[i]
 
+        self.learnable_vars = nn.Parameter(torch.ones(1, 1, latent_dim))
+
         # output layer
         # self.fc_mu = nn.Linear(curr_input_dim, latent_dim)
         # self.fc_logvar = nn.Linear(curr_input_dim, latent_dim)
@@ -120,12 +122,12 @@ class RNNEncoder(nn.Module):
         # TODO: add option to incorporate the initial state
 
         # we start out with a hidden state of zero
-        x = torch.zeros((1, batch_size, self.input_dim), requires_grad=True).to(device)
+        # x = torch.zeros((1, batch_size, self.input_dim), requires_grad=True).to(device)
         hidden_state = torch.zeros((1, batch_size, self.hidden_size), requires_grad=True).to(device)
-        old_means = torch.zeros((1, batch_size, self.latent_dim), requires_grad=True).to(device)
-        old_precision = torch.ones((1, batch_size, self.latent_dim), requires_grad=True).to(device)
+        # old_means = torch.zeros((1, batch_size, self.latent_dim), requires_grad=True).to(device)
+        # old_precision = torch.ones((1, batch_size, self.latent_dim), requires_grad=True).to(device)
 
-        h = hidden_state
+        '''h = hidden_state
         # forward through fully connected layers after GRU
         for i in range(len(self.fc_after_gru)):
             h = F.relu(self.fc_after_gru[i](h))
@@ -133,7 +135,11 @@ class RNNEncoder(nn.Module):
         output, _, new_mean, new_precision = self.metaMu(x,
                                                          hidden_state,
                                                          old_means,
-                                                         old_precision)
+                                                         old_precision)'''
+
+        new_mean = torch.zeros((1, batch_size, self.latent_dim), requires_grad=True).to(device)
+        new_precision = self.learnable_vars.expand((-1, batch_size, -1))
+        # print(torch.min(new_precision), torch.max(new_precision))
 
         latent_mean = new_mean
         latent_logvar = torch.log(1 / (new_precision))
@@ -156,6 +162,8 @@ class RNNEncoder(nn.Module):
         else:
             latent_sample = latent_mean
 
+        # TODO: check if what we return here as hidden_state is correct under the light of a learnable prior.
+        # TODO: Should the prior hidden_state be learnable too?
         return latent_sample, latent_mean, latent_logvar, hidden_state, new_precision
 
     def forward(self, actions, states, rewards, hidden_state, old_precision, old_means, return_prior, sample=True, detach_every=None):
