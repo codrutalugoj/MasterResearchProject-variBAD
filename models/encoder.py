@@ -127,10 +127,15 @@ class RNNEncoder(nn.Module):
         actions = actions.reshape((-1, *actions.shape[-2:]))
         states = states.reshape((-1, *states.shape[-2:]))
         rewards = rewards.reshape((-1, *rewards.shape[-2:]))
-        print('encoder reward input', rewards.shape)
+        print('encoder reward', rewards.shape)
 
         # TODO: Insert probabilistic reward here
-        # https://stackoverflow.com/questions/43988546/apply-function-along-axis-over-two-numpy-arrays-shapes-not-aligned
+        '''eps = 0.5
+        condition = torch.tensor(np.random.choice([0, 1], p=[1-eps, eps], size=5), dtype=torch.bool)
+        print('encoder rew cond', condition.shape)
+        rnd_rewards = torch.tensor(np.random.choice([0, 1], p=[0.5, 0.5], size=5), dtype=torch.bool)
+        new_reward = torch.where(condition, rewards, rnd_rewards)
+        exit()'''
 
         if hidden_state is not None:
             # if the sequence_len is one, this will add a dimension at dim 0 (otherwise will be the same)
