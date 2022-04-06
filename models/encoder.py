@@ -130,9 +130,11 @@ class RNNEncoder(nn.Module):
 
         # Probabilist VAE reward perception
         eps = 0.9  # probability of receiving a random perceptual state
-        condition = torch.tensor(np.random.choice([0, 1], p=[eps, 1 - eps], size=rewards.shape), dtype=torch.bool)
+        condition = torch.tensor(np.random.choice([0, 1], p=[eps, 1 - eps], size=rewards.shape),
+                                 dtype=torch.bool, device=device)
         # print('encoder rew cond', condition.shape)
-        rnd_rewards = torch.tensor(np.random.choice([1, -0.1], p=[0.5, 0.5], size=rewards.shape), dtype=torch.float)
+        rnd_rewards = torch.tensor(np.random.choice([1, -0.1], p=[0.5, 0.5], size=rewards.shape),
+                                   dtype=torch.float, device=device)
         rewards = torch.where(condition, rewards, rnd_rewards)
 
         if hidden_state is not None:
