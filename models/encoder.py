@@ -68,6 +68,11 @@ class RNNEncoder(nn.Module):
         self.fc_mu = nn.Linear(curr_input_dim, latent_dim)
         self.fc_logvar = nn.Linear(curr_input_dim, latent_dim)
 
+        # probabilistic reward perception
+        prop_rew_eps = 0.5
+        self.prob_rew_perception_p = torch.tensor([prop_rew_eps, 1 - prop_rew_eps], device=device)
+        self.prob_rew_rnd_rew_p = torch.tensor([.5, .5], device=device)
+
     def _sample_gaussian(self, mu, logvar, num=None):
         if num is None:
             std = torch.exp(0.5 * logvar)
@@ -129,19 +134,13 @@ class RNNEncoder(nn.Module):
         rewards = rewards.reshape((-1, *rewards.shape[-2:]))
 
         # Probabilist VAE reward perception
-        '''eps = 0.5
-        prob_rew_perception_p = torch.tensor([eps, 1 - eps], device=device)
-        prob_rew_rnd_rew_p = torch.tensor([.5, .5], device=device)
-
         rewards = rewards.squeeze(-1)
         rew_seqlen = rewards.shape[0]
         rew_batch = rewards.shape[1]
-        condition = prob_rew_perception_p.multinomial(rew_seqlen * rew_batch, replacement=True).view(rew_seqlen,
-                                                                                                     rew_batch)
-        rnd_rewards_idxs = prob_rew_rnd_rew_p.multinomial(rew_seqlen * rew_batch, replacement=True).view(rew_seqlen,
-                                                                                                         rew_batch)
+        condition = self.prob_rew_perception_p.multinomial(rew_seqlen * rew_batch, replacement=True).view(rew_seqlen, rew_batch)
+        rnd_rewards_idxs = self.prob_rew_rnd_rew_p.multinomial(rew_seqlen * rew_batch, replacement=True).view(rew_seqlen, rew_batch)
         rnd_rewards = torch.where(rnd_rewards_idxs.bool(), 1.0, -0.1)
-        rewards = torch.where(condition.bool(), rewards, rnd_rewards).unsqueeze(-1)'''
+        rewards = torch.where(condition.bool(), rewards, rnd_rewards).unsqueeze(-1)
 
         if hidden_state is not None:
             # if the sequence_len is one, this will add a dimension at dim 0 (otherwise will be the same)
