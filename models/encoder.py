@@ -129,7 +129,7 @@ class RNNEncoder(nn.Module):
         rewards = rewards.reshape((-1, *rewards.shape[-2:]))
 
         # Probabilist VAE reward perception
-        eps = 0.5
+        '''eps = 0.5
         prob_rew_perception_p = torch.tensor([eps, 1 - eps], device=device)
         prob_rew_rnd_rew_p = torch.tensor([.5, .5], device=device)
 
@@ -141,7 +141,7 @@ class RNNEncoder(nn.Module):
         rnd_rewards_idxs = prob_rew_rnd_rew_p.multinomial(rew_seqlen * rew_batch, replacement=True).view(rew_seqlen,
                                                                                                          rew_batch)
         rnd_rewards = torch.where(rnd_rewards_idxs.bool(), 1.0, -0.1)
-        rewards = torch.where(condition.bool(), rewards, rnd_rewards).unsqueeze(-1)
+        rewards = torch.where(condition.bool(), rewards, rnd_rewards).unsqueeze(-1)'''
 
         if hidden_state is not None:
             # if the sequence_len is one, this will add a dimension at dim 0 (otherwise will be the same)
