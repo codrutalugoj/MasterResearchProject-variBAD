@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 class MetaMu(nn.Module):
 
-    def __init__(self, input_size, hidden_size, latent_dim, mid_size=10, sparse=False, device='cpu'):
+    def __init__(self, input_size, hidden_size, latent_dim, mid_size, sparse=False, device='cpu'):
         super().__init__()
         self.hidden_size = hidden_size
         self.latent_dim = latent_dim
@@ -31,6 +31,7 @@ class MetaMu(nn.Module):
         if mean_old and precision_old is None:
             generate a prior here.
         """
+
         '''print('   metaMu')
         print('     x:', x.shape) #  [1, 16, 16] / [60, 16, 16]
         print('     h_old:', h_old.shape) #  [1, 16, 64] / [1, 16, 64] # 64=gru_hidden_size
@@ -59,15 +60,14 @@ class MetaMu(nn.Module):
             precision_update_gate = self.gate_f(self.linear_i(cat_inpt))
             precision_update = F.softplus(self.linear_c(cat_inpt))
             # print('       prec update gate', precision_update_gate.shape)
-            # print('       prec update', precision_update.shape)
             out_precisions[t] = old_precision + precision_update_gate * precision_update
             # print(' out prec', out_precisions[t])
 
             mean_gate = (old_precision / out_precisions[t]).detach()  # lambda
             mean_update = torch.tanh(self.linear_g(cat_inpt))
+
             out_means[t] = mean_gate * old_mean + (1 - mean_gate) * mean_update
 
-            # TODO: replace softplus with tanh
             h_new = torch.tanh(self.outl2(torch.tanh(self.outl1(torch.cat((cat_inpt, out_means[t], 1 / out_precisions[t]), -1)))))
             outputs[t] = h_new
 

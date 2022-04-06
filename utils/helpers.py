@@ -133,7 +133,7 @@ def update_encoding(encoder, next_obs, action, reward, done, hidden_state, old_m
         hidden_state, old_means, precision = encoder.reset_hidden(hidden_state, old_means, precision, done)
 
     with torch.no_grad():
-        latent_sample, latent_mean, latent_logvar, hidden_state, new_precision = encoder(actions=action.float(),
+        latent_sample, latent_mean, latent_logvar, hidden_state, hidden_mean, new_precision = encoder(actions=action.float(),
                                                                           states=next_obs,
                                                                           rewards=reward,
                                                                           hidden_state=hidden_state,

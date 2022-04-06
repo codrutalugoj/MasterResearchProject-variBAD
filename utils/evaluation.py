@@ -55,7 +55,7 @@ def evaluate(args,
 
     if encoder is not None:
         # reset latent state to prior
-        latent_sample, latent_mean, latent_logvar, hidden_state, precision = encoder.prior(num_processes)
+        latent_sample, latent_mean, latent_logvar, hidden_state, hidden_mean, precision = encoder.prior(num_processes)
         # print('   eval prec', precision.shape)
         # print('   eval mean', latent_mean.shape)
     else:
@@ -88,7 +88,7 @@ def evaluate(args,
                                                                                               reward=rew_raw,
                                                                                               done=None,
                                                                                               hidden_state=hidden_state,
-                                                                                              old_means=latent_mean,
+                                                                                              old_means=hidden_mean,
                                                                                               precision=precision)
 
             # add rewards
@@ -253,7 +253,6 @@ def get_test_rollout(args, env, policy, encoder=None):
                     rew_raw.reshape((1, 1)).float().to(device),
                     hidden_state,
                     return_prior=False)
-
                 episode_latent_samples[episode_idx].append(curr_latent_sample[0].clone())
                 episode_latent_means[episode_idx].append(curr_latent_mean[0].clone())
                 episode_latent_logvars[episode_idx].append(curr_latent_logvar[0].clone())
