@@ -127,15 +127,13 @@ class RNNEncoder(nn.Module):
         actions = actions.reshape((-1, *actions.shape[-2:]))
         states = states.reshape((-1, *states.shape[-2:]))
         rewards = rewards.reshape((-1, *rewards.shape[-2:]))
-        print('encoder reward', rewards.shape)
 
-        # TODO: Insert probabilistic reward here
-        '''eps = 0.5
-        condition = torch.tensor(np.random.choice([0, 1], p=[1-eps, eps], size=5), dtype=torch.bool)
-        print('encoder rew cond', condition.shape)
-        rnd_rewards = torch.tensor(np.random.choice([0, 1], p=[0.5, 0.5], size=5), dtype=torch.bool)
-        new_reward = torch.where(condition, rewards, rnd_rewards)
-        exit()'''
+        # Probabilist VAE reward perception
+        eps = 0.9  # probability of receiving a random perceptual state
+        condition = torch.tensor(np.random.choice([0, 1], p=[eps, 1 - eps], size=rewards.shape), dtype=torch.bool)
+        # print('encoder rew cond', condition.shape)
+        rnd_rewards = torch.tensor(np.random.choice([1, -0.1], p=[0.5, 0.5], size=rewards.shape), dtype=torch.float)
+        rewards = torch.where(condition, rewards, rnd_rewards)
 
         if hidden_state is not None:
             # if the sequence_len is one, this will add a dimension at dim 0 (otherwise will be the same)
