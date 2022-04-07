@@ -23,11 +23,11 @@ def main_numpy():
     print(rewards)
 
 
-def main():
+def main_torch():
     rewards = torch.ones((2, 4, 1))
     # rewards is seq, batch, feature -> but feature dim is 1, hence we can 'ignore' it
 
-    eps = 0.5
+    eps = 0.9  # probability of randomized perceptual state
     prob_rew_perception_p = torch.tensor([eps, 1 - eps], device=device)
     prob_rew_rnd_rew_p = torch.tensor([.5, .5], device=device)
 
@@ -50,5 +50,5 @@ if __name__ == "__main__":
     print()
 
     s = time.time()
-    main()
+    main_torch()
     print(time.time() - s)
