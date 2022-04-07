@@ -143,7 +143,7 @@ def update_encoding(encoder, next_obs, action, reward, done, hidden_state, old_m
 
     # TODO: move the sampling out of the encoder!
 
-    return latent_sample, latent_mean, latent_logvar, hidden_state, new_precision
+    return latent_sample, latent_mean, latent_logvar, hidden_state, hidden_mean, new_precision
 
 
 def seed(seed, deterministic_execution=False):

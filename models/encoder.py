@@ -160,6 +160,7 @@ class RNNEncoder(nn.Module):
             hidden_state = hidden_state.reshape((-1, *hidden_state.shape[-2:]))
 
         if return_prior:
+            # print('enc return prior', old_precision.shape)
             # if hidden state is none, start with the prior
             prior_sample, prior_mean, prior_logvar, prior_hidden_state, prior_hidden_mean, prior_precision = self.prior(actions.shape[1])
             hidden_state = prior_hidden_state.clone()
@@ -183,10 +184,11 @@ class RNNEncoder(nn.Module):
             # h.shape: [1, 16, 16] / [60, 16, 16]
             # hidden_state.shape: [1, 16, 64] / [1, 16, 64] # 64=gru_hidden_size
             # output, _ = self.gru(h, hidden_state)
-            output, _, hidden_means, hidden_precisions = self.metaMu(h,
-                                                             hidden_state,
-                                                             old_means,
-                                                             old_precision)
+            output, _, hidden_means, hidden_precisions = self.metaMu(
+                x=h,
+                h_old=hidden_state,
+                old_mean=old_means,
+                old_precision=old_precision)
             # output.shape: [1, 16, 16] / [60, 16, 16]
         else:
             output = []

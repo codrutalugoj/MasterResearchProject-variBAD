@@ -211,7 +211,8 @@ class MetaLearner:
 
                 with torch.no_grad():
                     # compute next embedding (for next loop and/or value prediction bootstrap)
-                    latent_sample, latent_mean, latent_logvar, hidden_state, precision = utl.update_encoding(
+                    # TODO: Here we don't get hidden_means from the update_encoding. Should we?
+                    latent_sample, latent_mean, latent_logvar, hidden_state, hidden_means, precision = utl.update_encoding(
                         encoder=self.vae.encoder,
                         next_obs=next_state,
                         action=action,

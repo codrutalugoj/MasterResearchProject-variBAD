@@ -82,7 +82,7 @@ def evaluate(args,
 
             if encoder is not None:
                 # update the hidden state
-                latent_sample, latent_mean, latent_logvar, hidden_state, precision = utl.update_encoding(encoder=encoder,
+                latent_sample, latent_mean, latent_logvar, hidden_state, hidden_mean, precision = utl.update_encoding(encoder=encoder,
                                                                                               next_obs=state,
                                                                                               action=action,
                                                                                               reward=rew_raw,
