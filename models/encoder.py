@@ -64,11 +64,16 @@ class RNNEncoder(nn.Module):
             self.fc_after_gru.append(nn.Linear(curr_input_dim, layers_after_gru[i]))
             curr_input_dim = layers_after_gru[i]
 
+        self.learnable_vars = nn.Parameter(torch.ones(1, 1, latent_dim))
+
         # output layer
         self.fc_mu = nn.Linear(curr_input_dim, latent_dim)
         self.fc_logvar = nn.Linear(curr_input_dim, latent_dim)
 
-        self.learnable_vars = nn.Parameter(torch.ones(1, 1, latent_dim))
+        # probabilistic reward perception
+        prop_rew_eps = 0.1  # probability of randomized perceptual state
+        self.prob_rew_perception_p = torch.tensor([prop_rew_eps, 1 - prop_rew_eps], device=device)
+        self.prob_rew_rnd_rew_p = torch.tensor([.5, .5], device=device)
 
     def _sample_gaussian(self, mu, logvar, num=None):
         if num is None:
@@ -133,35 +138,6 @@ class RNNEncoder(nn.Module):
         For feeding in entire trajectories, sequence_len>1 and hidden_state=None.
         In the latter case, we return embeddings of length sequence_len+1 since they include the prior.
         """
-        # old_precision: None, 1, [1, 1, 5] / [1, 16, 5] / [16, 5] TODO: Why sometimes without sequence dimension?
-        # old_mean: None, 0, [1, 5], [16, 5], [1, 16, 5]
-
-        # TODO: Why is the belief reset at step 59? Cause after the reset there is a forward pass.
-        # before iter index
-        # [1], [1, 1, 5],  [1, 5]
-        # [16, 1], [1, 16, 5], [1, 16, 5] (1x)
-        # [16, 1], [1, 16, 5], [16, 5]
-
-        # iter_idx = t
-        #   in: act[60, 16, 1], None, None (1x)  # return_prior=True, call from encode_running_trajectory
-        #   out:  [61, 16, 5], [61, 16, 5]  # this is broken down to contain sequence_len=1
-        # step= 0 ... 59
-        #   in: act[16, 1], [16, 5], [16, 5]
-        #   out: [16, 5], [16, 5]
-        # UPDATE
-        #   in: [60, 25, 1], None, None (4x)
-        #   out: [61, 25, 5], [61, 25, 5]
-        # iter_idx = t+1
-        # ...
-
-        '''print('env forward actions', actions.shape)
-        try:
-            if (old_precision is not None) & (old_means is not None):
-                print("enc forward", return_prior, old_precision.shape, old_means.shape)
-            else:
-                print("enc forward", return_prior, old_precision, old_means)
-        except:
-            print("enc forward", return_prior, old_precision, old_means)'''
 
         # we do the action-normalisation (the the env bounds) here
         actions = utl.squash_action(actions, self.args)
@@ -170,6 +146,18 @@ class RNNEncoder(nn.Module):
         actions = actions.reshape((-1, *actions.shape[-2:]))
         states = states.reshape((-1, *states.shape[-2:]))
         rewards = rewards.reshape((-1, *rewards.shape[-2:]))
+
+        # Probabilist VAE reward perception
+        rewards = rewards.squeeze(-1)
+        rew_seqlen = rewards.shape[0]
+        rew_batch = rewards.shape[1]
+        condition = self.prob_rew_perception_p.multinomial(rew_seqlen * rew_batch, replacement=True).view(rew_seqlen,
+                                                                                                          rew_batch)
+        rnd_rewards_idxs = self.prob_rew_rnd_rew_p.multinomial(rew_seqlen * rew_batch, replacement=True).view(
+            rew_seqlen, rew_batch)
+        rnd_rewards = torch.where(rnd_rewards_idxs.bool(), 1.0, -0.1)
+        rewards = torch.where(condition.bool(), rewards, rnd_rewards).unsqueeze(-1)
+
         if hidden_state is not None:
             # if the sequence_len is one, this will add a dimension at dim 0 (otherwise will be the same)
             hidden_state = hidden_state.reshape((-1, *hidden_state.shape[-2:]))
