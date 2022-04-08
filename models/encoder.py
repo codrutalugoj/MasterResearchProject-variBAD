@@ -131,7 +131,7 @@ class RNNEncoder(nn.Module):
 
         latent_mean = F.linear(hidden_mean, self.W)
         latent_logvar = 1/hidden_precision
-        latent_logvar = F.linear(latent_logvar, self.W**2)
+        latent_logvar = torch.log(F.linear(latent_logvar, self.W**2))
 
         if sample:
             latent_sample = self.reparameterise(latent_mean, latent_logvar)
@@ -207,7 +207,7 @@ class RNNEncoder(nn.Module):
 
         latent_mean = F.linear(hidden_means, self.W)
         hidden_var = 1/hidden_precisions
-        latent_logvar = F.linear(hidden_var, self.W**2)
+        latent_logvar = torch.log(F.linear(hidden_var, self.W**2))
 
         if sample:
             latent_sample = self.reparameterise(latent_mean, latent_logvar)
