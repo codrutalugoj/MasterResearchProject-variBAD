@@ -64,14 +64,14 @@ class RNNEncoder(nn.Module):
             self.fc_after_gru.append(nn.Linear(curr_input_dim, layers_after_gru[i]))
             curr_input_dim = layers_after_gru[i]
 
-        self.learnable_vars = nn.Parameter(torch.ones(1, 1, latent_dim))
+        self.learnable_prior_vars = nn.Parameter(torch.ones(1, 1, latent_dim))
 
         # output layer
         self.fc_mu = nn.Linear(curr_input_dim, latent_dim)
         self.fc_logvar = nn.Linear(curr_input_dim, latent_dim)
 
         # probabilistic reward perception
-        prop_rew_eps = 0.1  # probability of randomized perceptual state
+        prop_rew_eps = 0.0  # probability of randomized perceptual state
         self.prob_rew_perception_p = torch.tensor([prop_rew_eps, 1 - prop_rew_eps], device=device)
         self.prob_rew_rnd_rew_p = torch.tensor([.5, .5], device=device)
 
@@ -120,7 +120,7 @@ class RNNEncoder(nn.Module):
         # precision = self.fc_logvar(h)
         # precision = F.softplus(precision)
 
-        precision = self.learnable_vars.expand((-1, batch_size, -1))
+        precision = self.learnable_prior_vars.expand((-1, batch_size, -1))
 
         latent_logvar = torch.log(1/precision)
 
@@ -221,7 +221,6 @@ class RNNEncoder(nn.Module):
             # lamda mean gate
             latent_mean = lambda_gate * old_means + (1 - lambda_gate) * new_means
             # latent_mean = new_means
-
 
         # print(new_precision, residual_precision, precision)
         latent_logvar = torch.log(1 / (new_precision))
