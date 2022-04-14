@@ -5,7 +5,7 @@ from gym.envs.mujoco import HalfCheetahEnv as HalfCheetahEnv_
 
 from utils import helpers as utl
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
 
 
 class HalfCheetahEnv(HalfCheetahEnv_):
