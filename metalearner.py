@@ -400,6 +400,7 @@ class MetaLearner:
                                                     encoder=self.vae.encoder,
                                                     iter_idx=self.iter_idx,
                                                     tasks=self.train_tasks,
+                                                    num_episodes=8
                                                     )
 
             # log the return avg/std across tasks (=processes)

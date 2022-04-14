@@ -12,21 +12,22 @@ class MetaMu(nn.Module):
         self.hidden_size = hidden_size
         self.latent_dim = latent_dim
         self.device = device
-        concat_size = input_size + hidden_size
+        concat_size = input_size + hidden_size * 2
 
-        self.linear_i = nn.Linear(in_features=concat_size, out_features=latent_dim)
-        self.linear_c = nn.Linear(in_features=concat_size, out_features=latent_dim)
-        self.linear_g = nn.Linear(in_features=concat_size, out_features=latent_dim)
-        self.outl1 = nn.Linear(in_features=concat_size + 2 * latent_dim,
+        self.linear_s = nn.Linear(in_features=input_size + hidden_size, out_features=latent_dim)  # Ws
+        self.linear_m = nn.Linear(in_features=input_size + hidden_size, out_features=latent_dim)  # Wm
+        self.linear_z = nn.Linear(in_features=concat_size, out_features=hidden_size)
+        '''self.outl1 = nn.Linear(in_features=concat_size + 2 * latent_dim,
                                out_features=mid_size)
         self.outl2 = nn.Linear(in_features=mid_size,
-                               out_features=hidden_size)
+                               out_features=hidden_size)'''
         self.gate_f = self.sparse_gate if sparse else torch.sigmoid
 
-    def sparse_gate(self, x, bias=-1):
-        return torch.sigmoid(x + bias) * nn.Softmax(1)(x)
+    def sparse_gate(self, x):
+        # return torch.sigmoid(x + bias) * nn.Softmax(1)(x)
+        return F.softplus(x) * nn.Softmax(1)(x)
 
-    def forward(self, x, h_old, old_mean, old_precision):
+    def forward(self, x, old_mean, old_precision):
         """
         if mean_old and precision_old is None:
             generate a prior here.
@@ -49,27 +50,22 @@ class MetaMu(nn.Module):
         seq_len = x.shape[0]
         batch = x.shape[1]
 
-        outputs = torch.zeros((seq_len, batch, self.hidden_size), device=self.device)
         out_means = torch.zeros((seq_len, batch, self.latent_dim), device=self.device)
         out_precisions = torch.zeros((seq_len, batch, self.latent_dim), device=self.device)
 
-        h_new = h_old[0]
         for t in range(seq_len):
-            cat_inpt = torch.cat((x[t], h_new), -1)
-            # print('       cat_input', cat_inpt.shape)
-            precision_update_gate = self.gate_f(self.linear_i(cat_inpt))
-            precision_update = F.softplus(self.linear_c(cat_inpt))
-            # print('       prec update gate', precision_update_gate.shape)
-            out_precisions[t] = old_precision + precision_update_gate * precision_update
-            # print(' out prec', out_precisions[t])
+            cat_input = torch.cat((x[t].unsqueeze(0) if len(old_mean.shape) == 3 else x[t], old_mean, old_precision), -1)
+            z = torch.tanh(self.linear_z(cat_input))
+            z = torch.cat((x[t].unsqueeze(0) if len(z.shape) == 3 else x[t], z), -1)
+
+            precision_update = self.gate_f(self.linear_s(z))
+            out_precisions[t] = old_precision + precision_update
+            # print("New precision ", out_precisions[t])
 
             mean_gate = (old_precision / out_precisions[t]).detach()  # lambda
-            mean_update = torch.tanh(self.linear_g(cat_inpt))
+            mean_update = torch.tanh(self.linear_m(z))
 
             out_means[t] = mean_gate * old_mean + (1 - mean_gate) * mean_update
-
-            h_new = torch.tanh(self.outl2(torch.tanh(self.outl1(torch.cat((cat_inpt, out_means[t], 1 / out_precisions[t]), -1)))))
-            outputs[t] = h_new
 
             # TODO: Could this cause a problem through call-by-reference?
             old_precision = out_precisions[t].clone()
@@ -77,4 +73,4 @@ class MetaMu(nn.Module):
 
         # print('     output', out_means, out_precisions)
         # print('     exc time ', round(time.time() - stime, 5))
-        return outputs, h_new, out_means, out_precisions
+        return out_means, out_precisions

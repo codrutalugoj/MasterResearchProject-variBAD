@@ -70,7 +70,7 @@ class RNNEncoder(nn.Module):
             hidden_size=hidden_size,
             latent_dim=hidden_size,
             mid_size=latent_dim,
-            sparse=False,
+            sparse=True,
             device=device)
 
         for name, param in self.metaMu.named_parameters():
@@ -199,9 +199,8 @@ class RNNEncoder(nn.Module):
             # h.shape: [1, 16, 16] / [60, 16, 16]
             # hidden_state.shape: [1, 16, 64] / [1, 16, 64] # 64=gru_hidden_size
             # output, _ = self.gru(h, hidden_state)
-            output, _, hidden_means, hidden_precisions = self.metaMu(
+            hidden_means, hidden_precisions = self.metaMu(
                 x=h,
-                h_old=hidden_state,
                 old_mean=old_means,
                 old_precision=old_precision)
             # output.shape: [1, 16, 16] / [60, 16, 16]
@@ -214,11 +213,13 @@ class RNNEncoder(nn.Module):
                 # detach hidden state; useful for BPTT when sequences are very long
                 hidden_state = hidden_state.detach()
             output = torch.cat(output, dim=0)
-        gru_h = output.clone()
+
+        output = torch.zeros_like(hidden_means, device=device)
+        '''gru_h = output.clone()
 
         # forward through fully connected layers after GRU
         for i in range(len(self.fc_after_gru)):
-            gru_h = F.relu(self.fc_after_gru[i](gru_h))
+            gru_h = F.relu(self.fc_after_gru[i](gru_h))'''
 
         latent_mean = F.linear(hidden_means, self.W)
         hidden_var = 1/hidden_precisions
@@ -234,6 +235,7 @@ class RNNEncoder(nn.Module):
             latent_mean = torch.cat((prior_mean, latent_mean))
             latent_logvar = torch.cat((prior_logvar, latent_logvar))
             hidden_precisions = torch.cat((prior_precision, hidden_precisions))
+
             output = torch.cat((prior_hidden_mean, output))
 
         if latent_mean.shape[0] == 1:  # TODO: Do this for precision as well. Done
