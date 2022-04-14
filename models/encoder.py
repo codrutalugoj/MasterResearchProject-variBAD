@@ -237,7 +237,7 @@ class RNNEncoder(nn.Module):
             hidden_precisions = torch.cat((prior_precision, hidden_precisions))
             output = torch.cat((prior_hidden_mean, hidden_means))
 
-        if latent_mean.shape[0] == 1:  # TODO: Do this for precision as well. Done
+        if latent_mean.shape[0] == 1:
             latent_sample, latent_mean, latent_logvar, hidden_precision = \
                 latent_sample[0], latent_mean[0], latent_logvar[0], hidden_precisions[0]
 
