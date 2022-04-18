@@ -211,7 +211,7 @@ class GridNavi(gym.Env):
         The environment passed to this method should be a SubProcVec or DummyVecEnv, not the raw env!
         """
 
-        num_episodes = args.max_rollouts_per_task
+        num_episodes = args.max_rollouts_per_task + args.extra_rollouts_per_task
         unwrapped_env = env.venv.unwrapped.envs[0]
 
         # --- initialise things we want to keep track of ---
@@ -247,7 +247,7 @@ class GridNavi(gym.Env):
         [state, belief, task] = utl.reset_env(env, args)
         start_obs = state.clone()
 
-        for episode_idx in range(args.max_rollouts_per_task):
+        for episode_idx in range(args.max_rollouts_per_task + args.extra_rollouts_per_task):
 
             curr_goal = env.get_task()
             curr_rollout_rew = []
@@ -411,7 +411,7 @@ def plot_bb(env, args, episode_all_obs, episode_goals, reward_decoder,
     Plot behaviour and belief.
     """
 
-    plt.figure(figsize=(1.5 * env._max_episode_steps, 1.5 * args.max_rollouts_per_task))
+    plt.figure(figsize=(1.5 * env._max_episode_steps, 1.5 * args.max_rollouts_per_task + args.extra_rollouts_per_task))
 
     num_episodes = len(episode_all_obs)
     num_steps = len(episode_all_obs[0])
@@ -431,7 +431,7 @@ def plot_bb(env, args, episode_all_obs, episode_goals, reward_decoder,
                 curr_logvars = episode_latent_logvars[episode_idx][:step_idx + 1]
 
             # choose correct subplot
-            plt.subplot(args.max_rollouts_per_task,
+            plt.subplot(args.max_rollouts_per_task + args.extra_rollouts_per_task,
                         math.ceil(env._max_episode_steps) + 1,
                         1 + episode_idx * (1 + math.ceil(env._max_episode_steps)) + step_idx),
 
