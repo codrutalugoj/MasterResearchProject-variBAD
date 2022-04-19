@@ -70,7 +70,7 @@ class RNNEncoder(nn.Module):
             hidden_size=hidden_size,
             latent_dim=hidden_size,
             mid_size=latent_dim,
-            sparse=False,
+            sparse=True,
             device=device)
 
         for name, param in self.metaMu.named_parameters():
