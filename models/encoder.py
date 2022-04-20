@@ -96,7 +96,7 @@ class RNNEncoder(nn.Module):
         # self.fc_logvar = nn.Linear(curr_input_dim, latent_dim)
 
         # probabilistic reward perception
-        prop_rew_eps = 0.0  # probability of randomized perceptual state
+        prop_rew_eps = self.args.probRewardPerc  # probability of randomized perceptual state
         self.prob_rew_perception_p = torch.tensor([prop_rew_eps, 1 - prop_rew_eps], device=device)
         self.prob_rew_rnd_rew_p = torch.tensor([.5, .5], device=device)
 
