@@ -56,7 +56,7 @@ class MetaMu2(nn.Module):
             z_inpt = torch.cat((x[t], current_m, current_s), -1)
             z = torch.cat((x[t], torch.tanh(self.linear_z(z_inpt))), -1)
 
-            out_s[t] = current_s + self.f(self.linear_s(z)) * 0.75
+            out_s[t] = current_s + self.f(self.linear_s(z)) * 0.5
             m_gate = (current_s / out_s[t]).detach()
             out_m[t] = m_gate * current_m + (1 - m_gate) * torch.tanh(self.linear_m(z))
 
