@@ -48,6 +48,7 @@ class MetaMu2(nn.Module):
         current_m = old_m
         current_s = old_s
         for t in range(seq_len):
+            # print("t", t, "/ ", seq_len, t - 1)
             '''print(f'     seq {t}')
             print('      x:', x[t].shape)  # [1, 16, 16] / [60, 16, 16]
             print('      current_m:', current_m.shape)
@@ -56,12 +57,12 @@ class MetaMu2(nn.Module):
             z_inpt = torch.cat((x[t], current_m, current_s), -1)
             z = torch.cat((x[t], torch.tanh(self.linear_z(z_inpt))), -1)
 
-            out_s[t] = current_s + self.f(self.linear_s(z)) * 0.75
+            out_s[t] = current_s + self.f(self.linear_s(z)) # * 0.75
             m_gate = (current_s / out_s[t]).detach()
             out_m[t] = m_gate * current_m + (1 - m_gate) * torch.tanh(self.linear_m(z))
 
-            current_m = out_m[t - 1].clone()
-            current_s = out_s[t - 1].clone()
+            current_m = out_m[t].clone()
+            current_s = out_s[t].clone()
 
         # print('     output', out_means, out_precisions)
         # print('     exc time ', round(time.time() - stime, 5))

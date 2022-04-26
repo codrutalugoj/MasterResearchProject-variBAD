@@ -25,7 +25,7 @@ except ImportError:
           'Do not set norm_actions_pre_sampling, this will break.')
     pass
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
 
 
 class Policy(nn.Module):
