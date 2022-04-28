@@ -54,7 +54,7 @@ class MetaMu2(nn.Module):
             print('      current_m:', current_m.shape)
             print('      current_s:', current_s.shape)'''
 
-            z_inpt = torch.cat((x[t], current_m, current_s), -1)
+            z_inpt = torch.cat((x[t], current_m, 1/current_s), -1)
             z = torch.cat((x[t], torch.tanh(self.linear_z(z_inpt))), -1)
 
             out_s[t] = current_s + self.f(self.linear_s(z)) # * 0.75
