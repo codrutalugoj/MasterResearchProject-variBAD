@@ -49,26 +49,21 @@ class RNNEncoder(nn.Module):
         # recurrent unit
         # TODO: TEST RNN vs GRU vs LSTM
         # curr_input_dim=16, hidden_size=64
-        '''self.gru = nn.GRU(input_size=curr_input_dim,
+        self.gru = nn.GRU(input_size=curr_input_dim,
                           hidden_size=hidden_size,
                           num_layers=1,
-                          )'''
+                          )
 
-        '''for name, param in self.gru.named_parameters():
+        for name, param in self.gru.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0)
             elif 'weight' in name:
-                nn.init.orthogonal_(param)'''
-
-        '''self.metaMu = torch.jit.script(MetaMu(
-            input_size=curr_input_dim,
-            hidden_size=hidden_size,
-            latent_dim=latent_dim))'''
+                nn.init.orthogonal_(param)
 
         self.metaMu = MetaMu2(
-            input_size=curr_input_dim,
+            input_size=hidden_size,
             hidden_size=hidden_size,
-            mid_size=64,
+            mid_size=curr_input_dim,  # the original linear output layer where curr_input_dim
             sparse=True,
             device=device)
 
@@ -197,15 +192,14 @@ class RNNEncoder(nn.Module):
             # GRU cell (output is outputs for each time step, hidden_state is last output)
             # h.shape: [1, 16, 16] / [60, 16, 16]
             # hidden_state.shape: [1, 16, 64] / [1, 16, 64] # 64=gru_hidden_size
-            # output, _ = self.gru(h, hidden_state)
+            # output.shape: [1, 16, 16] / [60, 16, 16]
+            output, _ = self.gru(h, hidden_state)
+
             hidden_means, hidden_precisions = self.metaMu(
-                x=h,
+                x=output,  # used h in metaMu2
                 old_m=old_means,
                 old_s=old_precision)
 
-            # TODO: This is just a placeholder. Remove hidden_state entirely from code!
-            output = torch.zeros_like(hidden_means)
-            # output.shape: [1, 16, 16] / [60, 16, 16]
         else:
             output = []
             for i in range(int(np.ceil(h.shape[0] / detach_every))):
@@ -215,7 +209,7 @@ class RNNEncoder(nn.Module):
                 # detach hidden state; useful for BPTT when sequences are very long
                 hidden_state = hidden_state.detach()
             output = torch.cat(output, dim=0)
-        gru_h = output.clone()
+        # gru_h = output.clone()
 
         # forward through fully connected layers after GRU
         # for i in range(len(self.fc_after_gru)):
