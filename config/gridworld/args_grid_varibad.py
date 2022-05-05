@@ -12,7 +12,7 @@ def get_args(rest_args):
     parser.add_argument('--extra_rollouts_per_task', type=int, default=4, help='out of training evaluation episodes')
     parser.add_argument('--exp_label', default='varibad', help='label (typically name of method)')
     parser.add_argument('--env_name', default='GridNavi-v0', help='environment to train on')
-    parser.add_argument('--probRewardPerc', type=float, default=0.3, help='probability of the VAE perceiving a random reward')
+    parser.add_argument('--probRewardPerc', type=float, default=0.0, help='probability of the VAE perceiving a random reward')
 
     # --- POLICY ---
 
