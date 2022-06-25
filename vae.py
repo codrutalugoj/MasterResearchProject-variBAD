@@ -11,7 +11,7 @@ from models.encoder import RNNEncoder
 from utils.helpers import get_task_dim, get_num_tasks
 from utils.storage_vae import RolloutStorageVAE
 
-device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class VaribadVAE:
