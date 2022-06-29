@@ -205,7 +205,7 @@ class RNNEncoder(nn.Module):
         new_means = self.fc_mu(gru_h)
 
         post_fc_logvar = self.fc_logvar(gru_h)
-        residual_precision = F.softplus(post_fc_logvar) * nn.Softmax(-1)(post_fc_logvar)  # * 0.05
+        residual_precision = F.softplus(post_fc_logvar) # * nn.Softmax(-1)(post_fc_logvar)  # * 0.05
         # print(' res._precision/new_means', residual_precision.shape, new_means.shape)
 
         if old_precision is None:
