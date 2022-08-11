@@ -85,7 +85,7 @@ class RNNEncoder(nn.Module):
             self.fc_after_gru.append(nn.Linear(curr_input_dim, layers_after_gru[i]))
             curr_input_dim = layers_after_gru[i]
 
-        self.learnable_vars = nn.Parameter(torch.ones(1, 1, hidden_size), device=device)
+        self.learnable_vars = nn.Parameter(torch.ones(1, 1, hidden_size))
 
         self.W = nn.Parameter(torch.zeros(latent_dim, hidden_size), requires_grad=True)
         stdv = 1. / math.sqrt(self.W.size(1))
