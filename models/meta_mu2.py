@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+device = torch.device("cuda:9" if torch.cuda.is_available() else "cpu")
 
 class MetaMu2(nn.Module):
 
@@ -22,7 +23,7 @@ class MetaMu2(nn.Module):
         self.f = self.sparse_gate if sparse else torch.sigmoid
 
     def sparse_gate(self, x):
-        return F.softplus(x) * nn.Softmax(1)(x)
+        return F.softplus(x) # * nn.Softmax(1)(x)
 
     def forward(self, x, old_m, old_s):
 
@@ -59,7 +60,7 @@ class MetaMu2(nn.Module):
             # z = torch.cat((x[t], torch.sigmoid(self.linear_z(z_inpt))), -1)
             z = torch.tanh(torch.cat((x[t], torch.sigmoid(self.linear_z(z_inpt))), -1))
 
-            out_s[t] = current_s + self.f(self.linear_s(z)) # * 0.75
+            out_s[t] = current_s + self.f(self.linear_s(z))  # * 0.75
             m_gate = (current_s / out_s[t]).detach()
             out_m[t] = m_gate * current_m + (1 - m_gate) * torch.tanh(self.linear_m(z))
 

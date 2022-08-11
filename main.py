@@ -26,8 +26,8 @@ from environments.parallel_envs import make_vec_envs
 from learner import Learner
 from metalearner import MetaLearner
 
-
 def main():
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--env-type', default='gridworld_varibad')
     args, rest_args = parser.parse_known_args()
@@ -161,6 +161,9 @@ def main():
         print('training', seed)
         args.seed = seed
         args.action_space = None
+        print(torch.cuda.is_available())
+        print(torch.cuda.get_device_name(torch.cuda.current_device()))
+
 
         if args.disable_metalearner:
             # If `disable_metalearner` is true, the file `learner.py` will be used instead of `metalearner.py`.

@@ -8,7 +8,7 @@ from torch.nn import functional as F
 from utils import helpers as utl
 from models.meta_mu2 import MetaMu2
 
-device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:9" if torch.cuda.is_available() else "cpu")
 
 
 class RNNEncoder(nn.Module):
@@ -85,7 +85,7 @@ class RNNEncoder(nn.Module):
             self.fc_after_gru.append(nn.Linear(curr_input_dim, layers_after_gru[i]))
             curr_input_dim = layers_after_gru[i]
 
-        self.learnable_vars = nn.Parameter(torch.ones(1, 1, hidden_size))
+        self.learnable_vars = nn.Parameter(torch.ones(1, 1, hidden_size), device=device)
 
         self.W = nn.Parameter(torch.zeros(latent_dim, hidden_size), requires_grad=True)
         stdv = 1. / math.sqrt(self.W.size(1))
@@ -204,7 +204,7 @@ class RNNEncoder(nn.Module):
                 old_s=old_precision)
 
             # TODO: This is just a placeholder. Remove hidden_state entirely from code!
-            output = torch.zeros_like(hidden_means)
+            output = torch.zeros_like(hidden_means).to(device)
             # output.shape: [1, 16, 16] / [60, 16, 16]
         else:
             output = []

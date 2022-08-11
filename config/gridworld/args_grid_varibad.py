@@ -6,13 +6,15 @@ def get_args(rest_args):
     parser = argparse.ArgumentParser()
 
     # --- GENERAL ---
+    parser.add_argument('--gpu', type=int, default=0, help='GPU number to use (for clusters)')
 
-    parser.add_argument('--num_frames', type=int, default=2e7, help='number of frames to train')
+    parser.add_argument('--num_frames', type=int, default=4e7, help='number of frames to train')
     parser.add_argument('--max_rollouts_per_task', type=int, default=4, help='number of MDP episodes for adaptation')
     parser.add_argument('--extra_rollouts_per_task', type=int, default=4, help='out of training evaluation episodes')
     parser.add_argument('--exp_label', default='varibad', help='label (typically name of method)')
     parser.add_argument('--env_name', default='GridNavi-v0', help='environment to train on')
-    parser.add_argument('--probRewardPerc', type=float, default=0.3, help='probability of the VAE perceiving a random reward')
+    parser.add_argument('--probRewardPerc', type=float, default=0.0, help='probability of the VAE perceiving a random reward')
+
 
     # --- POLICY ---
 
@@ -55,7 +57,7 @@ def get_args(rest_args):
     parser.add_argument('--ppo_clip_param', type=float, default=0.05, help='clamp param')
 
     # other hyperparameters
-    # TODO: lr_policy was 0.0007 0.01
+    # TODO: lr_policy was 0.0007 0.01 # 0.00007
     parser.add_argument('--lr_policy', type=float, default=0.0007, help='learning rate (default: 7e-4)')
     parser.add_argument('--num_processes', type=int, default=16,
                         help='how many training CPU processes / parallel environments to use (default: 16)')
@@ -78,6 +80,7 @@ def get_args(rest_args):
     # --- VAE TRAINING ---
 
     # general
+    # lr_vae default: 0.001
     parser.add_argument('--lr_vae', type=float, default=0.001)
     parser.add_argument('--size_vae_buffer', type=int, default=100000,
                         help='how many trajectories (!) to keep in VAE buffer')
