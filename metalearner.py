@@ -492,5 +492,8 @@ class MetaLearner:
                               param_list[i].grad.shape if param_list[i].grad is not None else 'None')'''
 
                     if param_list[0].grad is not None:
+                        for i in range(len(param_list)):
+                            if param_list[i].grad is None:
+                                print("None gradient", param_list[i])
                         param_grad_mean = np.mean([param_list[i].grad.cpu().numpy().mean() for i in range(len(param_list))])
                         self.logger.add('gradients/{}'.format(name), param_grad_mean, self.iter_idx)

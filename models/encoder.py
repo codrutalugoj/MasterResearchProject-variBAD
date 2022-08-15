@@ -73,10 +73,11 @@ class RNNEncoder(nn.Module):
             device=device)
 
         for name, param in self.metaMu.named_parameters():
-            if 'bias' in name:
-                nn.init.constant_(param, 0)
-            elif 'weight' in name:
-                nn.init.orthogonal_(param)
+            if "layer_norm" not in name:
+                if 'bias' in name:
+                    nn.init.constant_(param, 0)
+                elif 'weight' in name:
+                    nn.init.orthogonal_(param)
 
         # fully connected layers after the recurrent cell
         curr_input_dim = hidden_size
@@ -85,7 +86,7 @@ class RNNEncoder(nn.Module):
             self.fc_after_gru.append(nn.Linear(curr_input_dim, layers_after_gru[i]))
             curr_input_dim = layers_after_gru[i]
 
-        self.learnable_vars = nn.Parameter(torch.ones(1, 1, hidden_size))
+        self.learnable_vars = nn.Parameter(torch.zeros(1, 1, hidden_size) + 0.01)
 
         self.W = nn.Parameter(torch.zeros(latent_dim, hidden_size), requires_grad=True)
         stdv = 1. / math.sqrt(self.W.size(1))
@@ -191,7 +192,7 @@ class RNNEncoder(nn.Module):
         if old_means is None:
             batch_size = h.shape[1]
             old_means = torch.zeros((batch_size, self.hidden_size), requires_grad=True).to(device)
-            old_precision = torch.ones((batch_size, self.hidden_size), requires_grad=True).to(device)
+            old_precision = torch.zeros((batch_size, self.hidden_size), requires_grad=True).to(device) + 0.01
 
         if detach_every is None:
             # GRU cell (output is outputs for each time step, hidden_state is last output)

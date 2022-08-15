@@ -20,6 +20,14 @@ class MetaMu2(nn.Module):
         self.linear_s = nn.Linear(in_features=z_size, out_features=hidden_size)
         self.linear_m = nn.Linear(in_features=z_size, out_features=hidden_size)
 
+        self.layer_norm = True
+        # print("INPUT SIZE", input_size)
+        # print("HIDDEN SIZE", hidden_size)
+
+        # self.layer_norm_x = nn.LayerNorm(input_size)
+        # self.layer_norm_s = nn.LayerNorm(hidden_size)
+        # self.layer_norm_m = nn.LayerNorm(hidden_size)
+
         self.f = self.sparse_gate if sparse else torch.sigmoid
 
     def sparse_gate(self, x):
@@ -48,19 +56,22 @@ class MetaMu2(nn.Module):
 
         current_m = old_m
         current_s = old_s
+
         for t in range(seq_len):
             # print("t", t, "/ ", seq_len, t - 1)
             '''print(f'     seq {t}')
             print('      x:', x[t].shape)  # [1, 16, 16] / [60, 16, 16]
             print('      current_m:', current_m.shape)
             print('      current_s:', current_s.shape)'''
-
-            z_inpt = torch.cat((x[t], current_m, 1/current_s), -1)
+            # print("X shape, m shape", x[t].shape, current_m.shape)
+            z_inpt = torch.cat((x[t], current_m, 1 / current_s), -1)
+            #z_inpt = torch.cat((self.layer_norm_x(x[t]), current_m, 1/current_s), -1)
             # z = torch.cat((x[t], torch.tanh(self.linear_z(z_inpt))), -1)
             # z = torch.cat((x[t], torch.sigmoid(self.linear_z(z_inpt))), -1)
             z = torch.tanh(torch.cat((x[t], torch.sigmoid(self.linear_z(z_inpt))), -1))
 
             out_s[t] = current_s + self.f(self.linear_s(z))  # * 0.75
+
             m_gate = (current_s / out_s[t]).detach()
             out_m[t] = m_gate * current_m + (1 - m_gate) * torch.tanh(self.linear_m(z))
 
@@ -69,4 +80,7 @@ class MetaMu2(nn.Module):
 
         # print('     output', out_means, out_precisions)
         # print('     exc time ', round(time.time() - stime, 5))
+        '''if self.layer_norm:
+            return self.layer_norm_m(out_m), self.layer_norm_s(out_s)
+        else:'''
         return out_m, out_s

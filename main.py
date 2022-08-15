@@ -161,8 +161,6 @@ def main():
         print('training', seed)
         args.seed = seed
         args.action_space = None
-        print(torch.cuda.is_available())
-        print(torch.cuda.get_device_name(torch.cuda.current_device()))
 
 
         if args.disable_metalearner:

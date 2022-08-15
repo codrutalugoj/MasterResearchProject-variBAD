@@ -202,6 +202,8 @@ class Policy(nn.Module):
         Returns the (raw) actions and their value.
         """
         value, actor_features = self.forward(state=state, latent=latent, belief=belief, task=task)
+        # print('Actor features', actor_features)
+        # print(torch.log(actor_features))
         dist = self.dist(actor_features)
         if deterministic:
             if isinstance(dist, FixedCategorical):
