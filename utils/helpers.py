@@ -12,7 +12,7 @@ from torch.nn import functional as F
 
 from environments.parallel_envs import make_vec_envs
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
 
 
 # def save_models(args, logger, policy, vae, envs, iter_idx):
