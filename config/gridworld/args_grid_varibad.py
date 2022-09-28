@@ -9,7 +9,7 @@ def get_args(rest_args):
 
     parser.add_argument('--num_frames', type=int, default=2e7, help='number of frames to train')
     parser.add_argument('--max_rollouts_per_task', type=int, default=4, help='number of MDP episodes for adaptation')
-    parser.add_argument('--extra_rollouts_per_task', type=int, default=4, help='out of training evaluation episodes')
+    parser.add_argument('--extra_rollouts_per_task', type=int, default=0, help='out of training evaluation episodes')
     parser.add_argument('--exp_label', default='varibad', help='label (typically name of method)')
     parser.add_argument('--env_name', default='GridNavi-v0', help='environment to train on')
 
@@ -101,7 +101,7 @@ def get_args(rest_args):
     parser.add_argument('--num_vae_updates', type=int, default=3,
                         help='how many VAE update steps to take per meta-iteration')
     parser.add_argument('--pretrain_len', type=int, default=0, help='for how many updates to pre-train the VAE')
-    parser.add_argument('--kl_weight', type=float, default=0.1, help='weight for the KL term')  # TODO: was 0.01
+    parser.add_argument('--kl_weight', type=float, default=0.5, help='weight for the KL term')  # TODO: was 0.01
 
     parser.add_argument('--split_batches_by_task', type=boolean_argument, default=False,
                         help='split batches up by task (to save memory or if tasks are of different length)')
