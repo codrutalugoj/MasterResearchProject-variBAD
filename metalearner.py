@@ -168,12 +168,9 @@ class MetaLearner:
 
         # log once before training
         with torch.no_grad():
-            # print('log')
             self.log(None, None, start_time)
-            # print('post log')
 
         for self.iter_idx in range(self.num_updates):
-            print(f'iter idx {self.iter_idx} / {self.num_updates}')
             # First, re-compute the hidden states given the current rollouts (since the VAE might've changed)
             with torch.no_grad():
                 latent_sample, latent_mean, latent_logvar, hidden_state, precision = self.encode_running_trajectory()
@@ -187,7 +184,6 @@ class MetaLearner:
 
             # rollout policies for a few steps
             for step in range(self.args.policy_num_steps):
-                #print(' step', step)
                 # sample actions from policy
                 with torch.no_grad():
                     value, action = utl.select_action(
