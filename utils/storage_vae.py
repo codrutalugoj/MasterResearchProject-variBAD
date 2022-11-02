@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:9" if torch.cuda.is_available() else "cpu")
 
 
 class RolloutStorageVAE(object):
@@ -40,7 +40,7 @@ class RolloutStorageVAE(object):
 
         # storage for each running process (stored on GPU)
         self.num_processes = num_processes
-        self.curr_timestep = torch.zeros((num_processes)).long()  # count environment steps so we know where to insert
+        self.curr_timestep = torch.zeros((num_processes), device="cpu").long()  # count environment steps so we know where to insert
         self.running_prev_state = torch.zeros((self.max_traj_len, num_processes, state_dim)).to(device)  # for each episode will have obs 0...N-1
         self.running_next_state = torch.zeros((self.max_traj_len, num_processes, state_dim)).to(device)  # for each episode will have obs 1...N
         self.running_rewards = torch.zeros((self.max_traj_len, num_processes, 1)).to(device)
