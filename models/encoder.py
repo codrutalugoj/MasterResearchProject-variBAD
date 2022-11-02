@@ -7,7 +7,7 @@ from torch.nn import functional as F
 from utils import helpers as utl
 from models.meta_mu import MetaMu
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:9" if torch.cuda.is_available() else "cpu")
 
 
 class RNNEncoder(nn.Module):
@@ -90,6 +90,11 @@ class RNNEncoder(nn.Module):
         # output layer
         # self.fc_mu = nn.Linear(curr_input_dim, latent_dim)
         # self.fc_logvar = nn.Linear(curr_input_dim, latent_dim)
+
+        # probabilistic reward perception
+        prop_rew_eps = args.probRewardPerc  # probability of randomized perceptual state
+        self.prob_rew_perception_p = torch.tensor([prop_rew_eps, 1 - prop_rew_eps], device=device)
+        self.prob_rew_rnd_rew_p = torch.tensor([.5, .5], device=device)
 
     def _sample_gaussian(self, mu, logvar, num=None):
         if num is None:
