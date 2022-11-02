@@ -143,7 +143,7 @@ class RNNEncoder(nn.Module):
                                                          old_precision)'''
 
         new_mean = torch.zeros((1, batch_size, self.latent_dim), requires_grad=True).to(device)
-        new_precision = self.learnable_vars.expand((-1, batch_size, -1))
+        new_precision = self.learnable_vars.expand((-1, batch_size, -1)).to(device)
         # print(torch.min(new_precision), torch.max(new_precision))
 
         latent_mean = new_mean
