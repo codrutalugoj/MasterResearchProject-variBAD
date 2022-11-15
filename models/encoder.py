@@ -7,7 +7,7 @@ from torch.nn import functional as F
 from utils import helpers as utl
 from models.meta_mu import MetaMu
 
-device = torch.device("cuda:9" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
 
 
 class RNNEncoder(nn.Module):
