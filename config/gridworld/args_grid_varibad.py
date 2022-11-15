@@ -8,7 +8,7 @@ def get_args(rest_args):
     # --- GENERAL ---
 
     parser.add_argument('--num_frames', type=int, default=2e7, help='number of frames to train')
-    parser.add_argument('--max_rollouts_per_task', type=int, default=4, help='number of MDP episodes for adaptation')
+    parser.add_argument('--max_rollouts_per_task', type=int, default=1, help='number of MDP episodes for adaptation') # default: 4
     parser.add_argument('--extra_rollouts_per_task', type=int, default=0, help='out of training evaluation episodes')
     parser.add_argument('--exp_label', default='varibad', help='label (typically name of method)')
     parser.add_argument('--env_name', default='GridNavi-v0', help='environment to train on')

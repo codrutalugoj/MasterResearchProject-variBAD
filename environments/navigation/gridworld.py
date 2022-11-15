@@ -23,7 +23,7 @@ class GridNavi(gym.Env):
         self.num_cells = num_cells
         self.num_states = num_cells ** 2
 
-        self._max_episode_steps = num_steps
+        self._max_episode_steps = 60  # num_steps
         self.step_count = 0
 
         self.observation_space = spaces.Box(low=0, high=self.num_cells - 1, shape=(2,))
