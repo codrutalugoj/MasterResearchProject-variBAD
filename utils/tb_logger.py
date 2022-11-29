@@ -5,7 +5,7 @@ import os
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
 
 
 class TBLogger:

@@ -11,7 +11,7 @@ from models.encoder import RNNEncoder
 from utils.helpers import get_task_dim, get_num_tasks
 from utils.storage_vae import RolloutStorageVAE
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
 
 
 class VaribadVAE:
@@ -74,6 +74,7 @@ class VaribadVAE:
             reward_size=1,
             reward_embed_size=self.args.reward_embedding_size,
         ).to(device)
+        print("Total num parameters: ", sum(p.numel() for p in encoder.parameters() if p.requires_grad))
         return encoder
 
     def initialise_decoder(self):
