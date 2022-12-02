@@ -74,6 +74,7 @@ class VaribadVAE:
             reward_size=1,
             reward_embed_size=self.args.reward_embedding_size,
         ).to(device)
+        print("Encoder trainable number of parameters:", sum(p.numel() for p in encoder.parameters() if p.requires_grad))
         return encoder
 
     def initialise_decoder(self):
