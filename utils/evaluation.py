@@ -5,7 +5,7 @@ import torch
 from environments.parallel_envs import make_vec_envs
 from utils import helpers as utl
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:9" if torch.cuda.is_available() else "cpu")
 
 
 def evaluate(args,

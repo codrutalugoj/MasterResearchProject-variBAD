@@ -9,7 +9,7 @@ import seaborn as sns
 from gym import Env
 from gym import spaces
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:9" if torch.cuda.is_available() else "cpu")
 
 
 def semi_circle_goal_sampler():
